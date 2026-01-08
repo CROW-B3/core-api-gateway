@@ -6,7 +6,11 @@
   "compatibility_date": "2025-12-17",
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    "ENVIRONMENT": "prod",
+    "AUTH_SERVICE_URL": "https://internal.auth-api.crowai.dev"
   },
   "d1_databases": [
     {
@@ -21,11 +25,21 @@
       "bucket_name": "crow-core-api-gateway-store"
     }
   ],
+  "kv_namespaces": [
+    {
+      "binding": "CACHE",
+      "id": "d0ebb3b8538144e3b2bb944fd77e87cc"
+    }
+  ],
   "routes": [
     { "pattern": "api.crowai.dev", "custom_domain": true }
   ],
   "env": {
     "dev": {
+      "vars": {
+        "ENVIRONMENT": "dev",
+        "AUTH_SERVICE_URL": "https://dev.internal.auth-api.crowai.dev"
+      },
       "routes": [
         { "pattern": "dev.api.crowai.dev", "custom_domain": true }
       ],
@@ -41,9 +55,19 @@
           "binding": "R2_BUCKET",
           "bucket_name": "crow-core-api-gateway-store-dev"
         }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "eb070e3c157545b18cb12d53427be411"
+        }
       ]
     },
     "local": {
+      "vars": {
+        "ENVIRONMENT": "local",
+        "AUTH_SERVICE_URL": "http://localhost:8001"
+      },
       "d1_databases": [
         {
           "binding": "DB",
@@ -56,7 +80,13 @@
           "binding": "R2_BUCKET",
           "bucket_name": "crow-core-api-gateway-store-local"
         }
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "CACHE",
+          "id": "261906828009411c8864b815f4289381"
+        }
       ]
-    },
-  },
+    }
+  }
 }
