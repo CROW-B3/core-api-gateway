@@ -17,14 +17,15 @@
       "id": "d0ebb3b8538144e3b2bb944fd77e87cc",
     },
   ],
-  "routes": [{ "pattern": "api.crowai.dev", "custom_domain": true }],
+  "routes": [
+    { "pattern": "api.crowai.dev", "custom_domain": true }
+  ],
   "env": {
     "dev": {
-      "vars": {
-        "ENVIRONMENT": "dev",
-      },
-      "routes": [{ "pattern": "dev.api.crowai.dev", "custom_domain": true }],
-      "kv_namespaces": [
+      "routes": [
+        { "pattern": "dev.api.crowai.dev", "custom_domain": true }
+      ],
+      "d1_databases": [
         {
           "binding": "CACHE",
           "id": "eb070e3c157545b18cb12d53427be411",
