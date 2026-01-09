@@ -1,12 +1,6 @@
 import type { Context } from 'hono';
 import type { Environment } from '../types';
 import {
-  getCachedResponse,
-  getCacheKey,
-  setCachedResponse,
-  shouldCache,
-} from '../lib/cache';
-import {
   buildForwardPath,
   extractVersion,
   findServiceByPath,
@@ -25,24 +19,6 @@ export async function handleServiceRequest(
   }
 
   const forwardPath = buildForwardPath(path);
-
-  // TODO: refactor cache logic into a cleaner helper function
-  if (c.req.method === 'GET') {
-    const cacheKey = getCacheKey(c.req.raw, service.path, version);
-    const cachedResponse = await getCachedResponse(c.env, cacheKey);
-    if (cachedResponse) return cachedResponse;
-
-    const response = await forwardRequest(
-      c.req.raw,
-      service,
-      c.env,
-      forwardPath,
-      version
-    );
-    if (shouldCache(c.req.raw, response))
-      return setCachedResponse(c.env, cacheKey, response);
-    return response;
-  }
 
   return forwardRequest(c.req.raw, service, c.env, forwardPath, version);
 }
