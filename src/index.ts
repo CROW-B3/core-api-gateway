@@ -7,8 +7,7 @@ import { authMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
 import { rateLimitMiddleware } from './middleware/rate-limit';
-import { handleAuthRequest, handleAuthRootRequest } from './routes/auth';
-import { handleServiceRequest } from './routes/services';
+import { handleRequest } from './routes/services';
 
 const app = new Hono<{ Bindings: Environment }>();
 
@@ -37,14 +36,14 @@ app.get(
   c => c.json({ status: 'healthy', timestamp: new Date().toISOString() })
 );
 
-app.all('/api/:version{v[0-9]+}/auth/*', handleAuthRequest);
-app.all('/api/:version{v[0-9]+}/auth', handleAuthRootRequest);
+app.all('/api/:version{v[0-9]+}/auth/*', handleRequest);
+app.all('/api/:version{v[0-9]+}/auth', handleRequest);
 
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
   authMiddleware,
   cacheMiddleware,
-  handleServiceRequest
+  handleRequest
 );
 
 app.notFound(c =>
