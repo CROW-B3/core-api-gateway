@@ -1,8 +1,10 @@
 import type { Environment } from './types';
 import { Hono } from 'hono';
+import { cache } from 'hono/cache';
 import { logger as honoLogger } from 'hono/logger';
 import { logger } from './lib/logger';
 import { authMiddleware } from './middleware/auth';
+import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
 import { rateLimitMiddleware } from './middleware/rate-limit';
 import { handleAuthRequest, handleAuthRootRequest } from './routes/auth';
@@ -21,9 +23,21 @@ app.use('/api/*', async (c, next) => {
   return corsMiddleware(c, next);
 });
 
-app.get('/', c => c.json({ status: 'ok', service: 'core-api-gateway' }));
-app.get('/health', c =>
-  c.json({ status: 'healthy', timestamp: new Date().toISOString() })
+app.get(
+  '/',
+  cache({
+    cacheName: 'core-api-gateway',
+    cacheControl: 'max-age=300',
+  }),
+  c => c.json({ status: 'ok', service: 'core-api-gateway' })
+);
+app.get(
+  '/health',
+  cache({
+    cacheName: 'core-api-gateway',
+    cacheControl: 'max-age=60',
+  }),
+  c => c.json({ status: 'healthy', timestamp: new Date().toISOString() })
 );
 
 app.all('/api/:version{v[0-9]+}/auth/*', handleAuthRequest);
@@ -32,11 +46,13 @@ app.all('/api/:version{v[0-9]+}/auth', handleAuthRootRequest);
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
   authMiddleware,
+  cacheMiddleware,
   handleServiceRequest
 );
 app.all(
   '/api/:version{v[0-9]+}/:service',
   authMiddleware,
+  cacheMiddleware,
   handleServiceRootRequest
 );
 
