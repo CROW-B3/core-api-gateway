@@ -1,4 +1,5 @@
 import type { Environment } from '../types';
+import { logger } from './logger';
 
 interface CachedResponse {
   body: string;
@@ -41,7 +42,7 @@ export async function getCachedResponse(
       headers,
     });
   } catch (error) {
-    console.error('Cache read error:', error);
+    logger.error('Cache read error', error);
     return null;
   }
 }
@@ -78,7 +79,7 @@ export async function setCachedResponse(
       headers: responseHeaders,
     });
   } catch (error) {
-    console.error('Cache write error:', error);
+    logger.error('Cache write error', error);
     return response;
   }
 }

@@ -1,5 +1,6 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
 import { SERVICES } from '../types';
+import { logger } from './logger';
 
 export function getServiceUrl(
   service: ServiceConfig,
@@ -64,7 +65,7 @@ export async function forwardRequest(
       headers: responseHeaders,
     });
   } catch (error) {
-    console.error(`Forward error to ${service.name}:`, error);
+    logger.error(`Forward error to ${service.name}`, error);
     return new Response(
       JSON.stringify({
         error: 'Service Unavailable',
