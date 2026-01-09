@@ -3,59 +3,25 @@ import type { Environment } from '../types';
 import { createAnonymousSession } from '../lib/auth';
 import { getClientIPFromRequest } from '../lib/utils';
 
-interface AuthContext {
-  userId: string;
-  token: string;
-}
-
-interface CachedAuth {
-  token: string;
-  userId: string;
-}
-
 declare module 'hono' {
   interface ContextVariableMap {
-    auth: AuthContext;
+    token: string;
   }
 }
 
 const AUTH_CACHE_TTL = 3600;
 const AUTH_CACHE_PREFIX = 'auth:ip:';
 
-function decodeJWTPayload(token: string): { sub: string } {
-  const [, payloadB64] = token.split('.');
-  return JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
-}
-
-async function getCachedAuth(
-  env: Environment,
-  ip: string
-): Promise<CachedAuth | null> {
-  return env.CACHE.get<CachedAuth>(`${AUTH_CACHE_PREFIX}${ip}`, 'json');
-}
-
-async function setCachedAuth(
-  env: Environment,
-  ip: string,
-  token: string,
-  userId: string
-): Promise<void> {
-  await env.CACHE.put(
-    `${AUTH_CACHE_PREFIX}${ip}`,
-    JSON.stringify({ token, userId }),
-    { expirationTtl: AUTH_CACHE_TTL }
-  );
-}
-
 export async function authMiddleware(
   c: Context<{ Bindings: Environment }>,
   next: Next
 ) {
   const clientIP = getClientIPFromRequest(c.req.raw);
+  const cacheKey = `${AUTH_CACHE_PREFIX}${clientIP}`;
 
-  const cachedAuth = await getCachedAuth(c.env, clientIP);
-  if (cachedAuth) {
-    c.set('auth', { userId: cachedAuth.userId, token: cachedAuth.token });
+  const cachedToken = await c.env.CACHE.get(cacheKey);
+  if (cachedToken) {
+    c.set('token', cachedToken);
     return next();
   }
 
@@ -67,9 +33,7 @@ export async function authMiddleware(
     );
   }
 
-  const { sub: userId } = decodeJWTPayload(token);
-  await setCachedAuth(c.env, clientIP, token, userId);
-
-  c.set('auth', { userId, token });
+  await c.env.CACHE.put(cacheKey, token, { expirationTtl: AUTH_CACHE_TTL });
+  c.set('token', token);
   return next();
 }
