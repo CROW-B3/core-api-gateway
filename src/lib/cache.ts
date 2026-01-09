@@ -94,11 +94,3 @@ export function shouldCache(request: Request, response: Response): boolean {
 
   return true;
 }
-
-export async function invalidateCache(
-  env: Environment,
-  pattern: string
-): Promise<void> {
-  const list = await env.CACHE.list({ prefix: pattern });
-  await Promise.all(list.keys.map(key => env.CACHE.delete(key.name)));
-}
