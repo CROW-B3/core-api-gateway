@@ -1,6 +1,40 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
+import {
+  anyChar,
+  buildRegExp,
+  capture,
+  digit,
+  notChar,
+  oneOrMore,
+  startOfString,
+  zeroOrMore,
+} from 'ts-regex-builder';
 import { SERVICES } from '../types';
 import { logger } from './logger';
+
+const SERVICE_PATH_REGEX = buildRegExp([
+  startOfString,
+  '/api/v',
+  oneOrMore(digit),
+  '/',
+  capture(oneOrMore(notChar('/'))),
+]);
+
+const VERSION_REGEX = buildRegExp([
+  startOfString,
+  '/api/',
+  capture('v', oneOrMore(digit)),
+  '/',
+]);
+
+const FORWARD_PATH_REGEX = buildRegExp([
+  startOfString,
+  '/api/v',
+  oneOrMore(digit),
+  '/',
+  oneOrMore(notChar('/')),
+  capture(zeroOrMore(anyChar)),
+]);
 
 export function getServiceUrl(
   service: ServiceConfig,
@@ -10,7 +44,7 @@ export function getServiceUrl(
 }
 
 export function findServiceByPath(path: string): ServiceConfig | null {
-  const match = path.match(/^\/api\/v\d+\/([^/]+)/);
+  const match = path.match(SERVICE_PATH_REGEX);
   if (!match) return null;
 
   const servicePath = match[1];
@@ -18,12 +52,12 @@ export function findServiceByPath(path: string): ServiceConfig | null {
 }
 
 export function extractVersion(path: string): string | null {
-  const match = path.match(/^\/api\/(v\d+)\//);
+  const match = path.match(VERSION_REGEX);
   return match ? match[1] : null;
 }
 
 export function buildForwardPath(path: string): string {
-  const match = path.match(/^\/api\/v\d+\/[^/]+(.*)/);
+  const match = path.match(FORWARD_PATH_REGEX);
   return match ? match[1] || '/' : '/';
 }
 
