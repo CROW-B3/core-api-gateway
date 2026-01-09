@@ -1,4 +1,5 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
+import ky from 'ky';
 import {
   anyChar,
   buildRegExp,
@@ -87,7 +88,11 @@ export async function forwardRequest(
   });
 
   try {
-    const response = await fetch(forwardedRequest);
+    const response = await ky(targetUrl.toString(), {
+      method: forwardedRequest.method,
+      headers: forwardedRequest.headers,
+      body: forwardedRequest.body,
+    });
 
     const responseHeaders = new Headers(response.headers);
     responseHeaders.set('X-Gateway-Service', service.name);

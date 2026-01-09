@@ -1,4 +1,5 @@
 import type { Environment } from '../types';
+import ky from 'ky';
 import { SERVICES } from '../types';
 import { logger } from './logger';
 
@@ -15,21 +16,10 @@ export async function createAnonymousSession(
   const authUrl = authService.urls[env.ENVIRONMENT];
 
   try {
-    const signInResponse = await fetch(
+    const signInResponse = await ky.post(
       `${authUrl}/api/auth/sign-in/anonymous`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      }
+      { json: {} }
     );
-
-    if (!signInResponse.ok) {
-      logger.error('Anonymous sign-in failed', {
-        status: signInResponse.status,
-      });
-      return null;
-    }
 
     const cookies = signInResponse.headers.get('set-cookie');
     if (!cookies) {
@@ -37,17 +27,11 @@ export async function createAnonymousSession(
       return null;
     }
 
-    const tokenResponse = await fetch(`${authUrl}/api/auth/token`, {
-      method: 'GET',
-      headers: { Cookie: cookies },
-    });
-
-    if (!tokenResponse.ok) {
-      logger.error('Token fetch failed', { status: tokenResponse.status });
-      return null;
-    }
-
-    const { token } = (await tokenResponse.json()) as TokenResponse;
+    const { token } = (await ky
+      .get(`${authUrl}/api/auth/token`, {
+        headers: { Cookie: cookies },
+      })
+      .json()) as TokenResponse;
     return token;
   } catch (error) {
     logger.error('Anonymous session error', error);
