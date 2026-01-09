@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { logger as honoLogger } from 'hono/logger';
 import { logger } from './lib/logger';
 import { authMiddleware } from './middleware/auth';
+import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
 import { rateLimitMiddleware } from './middleware/rate-limit';
 import { handleAuthRequest, handleAuthRootRequest } from './routes/auth';
@@ -32,11 +33,13 @@ app.all('/api/:version{v[0-9]+}/auth', handleAuthRootRequest);
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
   authMiddleware,
+  cacheMiddleware,
   handleServiceRequest
 );
 app.all(
   '/api/:version{v[0-9]+}/:service',
   authMiddleware,
+  cacheMiddleware,
   handleServiceRootRequest
 );
 
