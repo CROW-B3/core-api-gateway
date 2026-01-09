@@ -7,9 +7,7 @@ import {
   forwardRequest,
 } from '../lib/router';
 
-export async function handleServiceRequest(
-  c: Context<{ Bindings: Environment }>
-) {
+export async function handleRequest(c: Context<{ Bindings: Environment }>) {
   const path = c.req.path;
   const version = extractVersion(path);
   const service = findServiceByPath(path);
