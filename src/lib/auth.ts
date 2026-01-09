@@ -17,7 +17,7 @@ export async function createAnonymousSession(
 
   try {
     const signInResponse = await ky.post(
-      `${authUrl}/api/auth/sign-in/anonymous`,
+      `${authUrl}/api/v1/auth/sign-in/anonymous`,
       { json: {} }
     );
 
@@ -28,7 +28,7 @@ export async function createAnonymousSession(
     }
 
     const { token } = (await ky
-      .get(`${authUrl}/api/auth/token`, {
+      .get(`${authUrl}/api/v1/auth/token`, {
         headers: { Cookie: cookies },
       })
       .json()) as TokenResponse;
