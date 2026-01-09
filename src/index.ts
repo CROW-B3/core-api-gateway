@@ -7,7 +7,7 @@ import { authMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
 import { rateLimitMiddleware } from './middleware/rate-limit';
-import { handleRequest } from './routes/services';
+import { handleRequest } from './routes';
 
 const app = new Hono<{ Bindings: Environment }>();
 
