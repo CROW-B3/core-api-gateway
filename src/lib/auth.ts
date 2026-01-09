@@ -1,6 +1,6 @@
 import type { Environment } from '../types';
 import ky from 'ky';
-import { SERVICES } from '../types';
+import { ServicePath, SERVICES } from '../constants';
 import { logger } from './logger';
 
 interface TokenResponse {
@@ -10,7 +10,7 @@ interface TokenResponse {
 export async function createAnonymousSession(
   env: Environment
 ): Promise<string | null> {
-  const authService = SERVICES.find(s => s.path === 'auth');
+  const authService = SERVICES.find(s => s.path === ServicePath.AUTH);
   if (!authService) return null;
 
   const authUrl = authService.urls[env.ENVIRONMENT];
