@@ -1,6 +1,5 @@
 {
-  "name": "cloudflare-workers-containers-hono-template",
-  "description": "Hono-powered Cloudflare Worker that routes requests to a serverless Container backend (Workers Containers) via @cloudflare/containers.",
+  "name": "crow-core-api-gateway",
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --env local --port 8000",
@@ -9,25 +8,22 @@
     "prepare": "husky",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "format": "bun run prettier src/ --write",
-    "bun:dev": "bun run --watch src/index.ts",
-    "bun:start": "bun run src/index.ts",
-    "bun:build": "bun build src/index.ts --compile --outfile server"
+    "format": "bun run prettier src/ --write"
   },
   "dependencies": {
-    "@antfu/eslint-config": "^6.7.1",
-    "@hono/swagger-ui": "^0.5.2",
-    "@hono/zod-openapi": "^1.1.5",
-    "hono": "^4.11.1",
-    "jiti": "^2.6.1",
-    "zod": "^4.2.1"
+    "@hono-rate-limiter/cloudflare": "^0.2.2",
+    "@hono/zod-openapi": "^1.2.0",
+    "hono": "^4.11.3",
+    "hono-rate-limiter": "^0.5.3",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@commitlint/config-conventional": "^20.2.0",
+    "@antfu/eslint-config": "^6.7.3",
+    "@commitlint/config-conventional": "^20.3.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
-    "wrangler": "^4.55.0"
+    "wrangler": "^4.58.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [

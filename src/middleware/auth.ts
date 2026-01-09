@@ -1,17 +1,16 @@
 import type { Context, Next } from 'hono';
 import type { Environment } from '../types';
-import {
-  createAnonymousSession,
-  extractBearerToken,
-  extractSessionCookie,
-  getTokenFromSession,
-} from '../lib/auth';
-import { verifyJWT } from '../lib/jwt';
+import { createAnonymousSession } from '../lib/auth';
+import { getClientIPFromRequest } from '../lib/utils';
 
 interface AuthContext {
   userId: string;
-  isAnonymous: boolean;
   token: string;
+}
+
+interface CachedAuth {
+  token: string;
+  userId: string;
 }
 
 declare module 'hono' {
@@ -20,79 +19,57 @@ declare module 'hono' {
   }
 }
 
+const AUTH_CACHE_TTL = 3600;
+const AUTH_CACHE_PREFIX = 'auth:ip:';
+
+function decodeJWTPayload(token: string): { sub: string } {
+  const [, payloadB64] = token.split('.');
+  return JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+}
+
+async function getCachedAuth(
+  env: Environment,
+  ip: string
+): Promise<CachedAuth | null> {
+  return env.CACHE.get<CachedAuth>(`${AUTH_CACHE_PREFIX}${ip}`, 'json');
+}
+
+async function setCachedAuth(
+  env: Environment,
+  ip: string,
+  token: string,
+  userId: string
+): Promise<void> {
+  await env.CACHE.put(
+    `${AUTH_CACHE_PREFIX}${ip}`,
+    JSON.stringify({ token, userId }),
+    { expirationTtl: AUTH_CACHE_TTL }
+  );
+}
+
 export async function authMiddleware(
   c: Context<{ Bindings: Environment }>,
   next: Next
 ) {
-  let token = extractBearerToken(c.req.raw);
+  const clientIP = getClientIPFromRequest(c.req.raw);
 
+  const cachedAuth = await getCachedAuth(c.env, clientIP);
+  if (cachedAuth) {
+    c.set('auth', { userId: cachedAuth.userId, token: cachedAuth.token });
+    return next();
+  }
+
+  const token = await createAnonymousSession(c.env);
   if (!token) {
-    const sessionCookie = extractSessionCookie(c.req.raw);
-    if (sessionCookie) {
-      token = await getTokenFromSession(c.env, sessionCookie);
-    }
-  }
-
-  if (token) {
-    const payload = await verifyJWT(token, c.env);
-    if (payload) {
-      c.set('auth', {
-        userId: payload.sub,
-        isAnonymous: payload.isAnonymous || false,
-        token,
-      });
-      return next();
-    }
-  }
-
-  const newToken = await createAnonymousSession(c.env);
-  if (!newToken) {
     return c.json(
-      { error: 'Unauthorized', message: 'Failed to create anonymous session' },
+      { error: 'Unauthorized', message: 'Failed to create session' },
       401
     );
   }
 
-  const payload = await verifyJWT(newToken, c.env);
-  if (!payload) {
-    return c.json(
-      { error: 'Unauthorized', message: 'Invalid anonymous token' },
-      401
-    );
-  }
+  const { sub: userId } = decodeJWTPayload(token);
+  await setCachedAuth(c.env, clientIP, token, userId);
 
-  c.set('auth', {
-    userId: payload.sub,
-    isAnonymous: true,
-    token: newToken,
-  });
-
-  return next();
-}
-
-export async function optionalAuthMiddleware(
-  c: Context<{ Bindings: Environment }>,
-  next: Next
-) {
-  let token = extractBearerToken(c.req.raw);
-
-  if (!token) {
-    const sessionCookie = extractSessionCookie(c.req.raw);
-    if (sessionCookie) {
-      token = await getTokenFromSession(c.env, sessionCookie);
-    }
-  }
-
-  if (token) {
-    const payload = await verifyJWT(token, c.env);
-    if (payload) {
-      c.set('auth', {
-        userId: payload.sub,
-        isAnonymous: payload.isAnonymous || false,
-        token,
-      });
-    }
-  }
-
+  c.set('auth', { userId, token });
   return next();
 }

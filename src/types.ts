@@ -1,5 +1,3 @@
-import { z } from '@hono/zod-openapi';
-
 export type ServiceEnvironment = 'local' | 'dev' | 'prod';
 
 export interface ServiceConfig {
@@ -115,29 +113,6 @@ export const SERVICES: ServiceConfig[] = [
 ];
 
 export interface Environment {
-  DB: D1Database;
-  R2_BUCKET: R2Bucket;
   CACHE: KVNamespace;
   ENVIRONMENT: ServiceEnvironment;
-  AUTH_SERVICE_URL: string;
 }
-
-export const HelloWorldSchema = z
-  .object({
-    text: z.string(),
-  })
-  .openapi('HelloWorld');
-
-export const ErrorSchema = z
-  .object({
-    error: z.string(),
-    message: z.string(),
-  })
-  .openapi('Error');
-
-export const StatusSchema = z
-  .object({
-    status: z.string(),
-    service: z.string(),
-  })
-  .openapi('Status');
