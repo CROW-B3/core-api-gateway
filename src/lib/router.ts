@@ -10,7 +10,7 @@ import {
   startOfString,
   zeroOrMore,
 } from 'ts-regex-builder';
-import { SERVICES } from '../types';
+import { SERVICES } from '../constants';
 import { logger } from './logger';
 
 const SERVICE_PATH_REGEX = buildRegExp([
