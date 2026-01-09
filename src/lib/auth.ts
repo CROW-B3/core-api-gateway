@@ -1,6 +1,6 @@
 import type { Environment } from '../types';
 import ky from 'ky';
-import { SERVICES } from '../types';
+import { SERVICES } from '../constants';
 import { logger } from './logger';
 
 interface TokenResponse {
