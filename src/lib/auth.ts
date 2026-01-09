@@ -1,6 +1,6 @@
 import type { Environment } from '../types';
 import ky from 'ky';
-import { SERVICES } from '../types';
+import { ServicePath, SERVICES } from '../constants';
 import { logger } from './logger';
 
 interface TokenResponse {
@@ -10,14 +10,14 @@ interface TokenResponse {
 export async function createAnonymousSession(
   env: Environment
 ): Promise<string | null> {
-  const authService = SERVICES.find(s => s.path === 'auth');
+  const authService = SERVICES.find(s => s.path === ServicePath.AUTH);
   if (!authService) return null;
 
   const authUrl = authService.urls[env.ENVIRONMENT];
 
   try {
     const signInResponse = await ky.post(
-      `${authUrl}/api/auth/sign-in/anonymous`,
+      `${authUrl}/api/v1/auth/sign-in/anonymous`,
       { json: {} }
     );
 
@@ -28,7 +28,7 @@ export async function createAnonymousSession(
     }
 
     const { token } = (await ky
-      .get(`${authUrl}/api/auth/token`, {
+      .get(`${authUrl}/api/v1/auth/token`, {
         headers: { Cookie: cookies },
       })
       .json()) as TokenResponse;
