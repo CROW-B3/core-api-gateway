@@ -19,20 +19,5 @@ export async function handleServiceRequest(
   }
 
   const forwardPath = buildForwardPath(path);
-
   return forwardRequest(c.req.raw, service, c.env, forwardPath, version);
-}
-
-export async function handleServiceRootRequest(
-  c: Context<{ Bindings: Environment }>
-) {
-  const path = c.req.path;
-  const version = extractVersion(path);
-  const service = findServiceByPath(path);
-
-  if (!service || !version) {
-    return c.json({ error: 'Not Found', message: 'Service not found' }, 404);
-  }
-
-  return forwardRequest(c.req.raw, service, c.env, '/', version);
 }
