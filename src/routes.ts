@@ -1,11 +1,11 @@
 import type { Context } from 'hono';
-import type { Environment } from '../types';
+import type { Environment } from './types';
 import {
   buildForwardPath,
   extractVersion,
   findServiceByPath,
   forwardRequest,
-} from '../lib/router';
+} from './lib/router';
 
 export async function handleRequest(c: Context<{ Bindings: Environment }>) {
   const path = c.req.path;
