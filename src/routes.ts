@@ -1,12 +1,11 @@
 import type { Context } from 'hono';
 import type { Environment } from './types';
-import { ServicePath } from './constants';
 import {
   buildForwardPath,
   extractVersion,
   findServiceByPath,
   forwardRequest,
-} from '../lib/router';
+} from './lib/router';
 
 const KEEP_SERVICE_PATH = [
   ServicePath.AUTH,
