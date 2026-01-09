@@ -1,11 +1,10 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
 import ky from 'ky';
 import {
-  anyChar,
+  any,
   buildRegExp,
   capture,
   digit,
-  notChar,
   oneOrMore,
   startOfString,
   zeroOrMore,
@@ -18,13 +17,13 @@ const SERVICE_PATH_REGEX = buildRegExp([
   '/api/v',
   oneOrMore(digit),
   '/',
-  capture(oneOrMore(notChar('/'))),
+  capture(oneOrMore(/[^/]/)),
 ]);
 
 const VERSION_REGEX = buildRegExp([
   startOfString,
   '/api/',
-  capture('v', oneOrMore(digit)),
+  capture(['v', oneOrMore(digit)]),
   '/',
 ]);
 
@@ -33,8 +32,8 @@ const FORWARD_PATH_REGEX = buildRegExp([
   '/api/v',
   oneOrMore(digit),
   '/',
-  oneOrMore(notChar('/')),
-  capture(zeroOrMore(anyChar)),
+  oneOrMore(/[^/]/),
+  capture(zeroOrMore(any)),
 ]);
 
 export function getServiceUrl(
