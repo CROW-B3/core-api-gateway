@@ -1,6 +1,7 @@
 import type { Environment } from './types';
 import { Hono } from 'hono';
-import { logger } from 'hono/logger';
+import { logger as honoLogger } from 'hono/logger';
+import { logger } from './lib/logger';
 import { authMiddleware } from './middleware/auth';
 import { createCorsMiddleware } from './middleware/cors';
 import { rateLimitMiddleware } from './middleware/rate-limit';
@@ -12,7 +13,7 @@ import {
 
 const app = new Hono<{ Bindings: Environment }>();
 
-app.use(logger());
+app.use(honoLogger());
 app.use('/api/*', rateLimitMiddleware);
 
 app.use('/api/*', async (c, next) => {
@@ -44,7 +45,7 @@ app.notFound(c =>
 );
 
 app.onError((err, c) => {
-  console.error('Gateway error:', err);
+  logger.error('Gateway error', err);
   return c.json({ error: 'Internal Server Error', message: err.message }, 500);
 });
 
