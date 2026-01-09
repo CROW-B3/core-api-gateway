@@ -1,24 +1,12 @@
 import type { Environment } from '../types';
 import { cors } from 'hono/cors';
+import { LOCAL_ORIGINS, PROD_ORIGINS } from '../constants';
 
 export function createCorsMiddleware(env: Environment) {
-  const origins = [
-    'https://crowai.dev',
-    'https://app.crowai.dev',
-    'https://api.crowai.dev',
-    'https://dev.crowai.dev',
-    'https://dev.app.crowai.dev',
-    'https://dev.api.crowai.dev',
-  ];
-
-  if (env.ENVIRONMENT === 'local') {
-    origins.push(
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:8000'
-    );
-  }
+  const origins =
+    env.ENVIRONMENT === 'local'
+      ? [...PROD_ORIGINS, ...LOCAL_ORIGINS]
+      : [...PROD_ORIGINS];
 
   return cors({
     origin: origins,
