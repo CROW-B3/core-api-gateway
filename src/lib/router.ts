@@ -56,7 +56,14 @@ export function extractVersion(path: string): string | null {
   return match ? match[1] : null;
 }
 
-export function buildForwardPath(path: string): string {
+export function buildForwardPath(
+  path: string,
+  keepServicePath = false
+): string {
+  if (keepServicePath) {
+    const match = path.match(/^\/api\/v\d+(\/.*)$/);
+    return match ? match[1] : '/';
+  }
   const match = path.match(FORWARD_PATH_REGEX);
   return match ? match[1] || '/' : '/';
 }
@@ -79,21 +86,21 @@ export async function forwardRequest(
   headers.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
   headers.set('X-Gateway-Service', service.name);
 
-  const forwardedRequest = new Request(targetUrl.toString(), {
-    method: request.method,
-    headers,
-    body: request.body,
-    redirect: 'manual',
-  });
-
   try {
     const response = await ky(targetUrl.toString(), {
-      method: forwardedRequest.method,
-      headers: forwardedRequest.headers,
-      body: forwardedRequest.body,
+      method: request.method,
+      headers,
+      body: request.body,
+      redirect: 'manual',
+      throwHttpErrors: false,
     });
 
-    const responseHeaders = new Headers(response.headers);
+    const responseHeaders = new Headers();
+
+    response.headers.forEach((value, key) => {
+      responseHeaders.append(key, value);
+    });
+
     responseHeaders.set('X-Gateway-Service', service.name);
     responseHeaders.set('X-Gateway-Version', version);
 
