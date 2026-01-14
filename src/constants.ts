@@ -12,6 +12,7 @@ export enum ServicePath {
   CHAT = 'chat',
   QNA = 'qna',
   MCP = 'mcp',
+  BILLING = 'billing',
 }
 
 export enum ServiceName {
@@ -26,6 +27,7 @@ export enum ServiceName {
   CHAT = 'bff-chat-service',
   QNA = 'bff-qna-service',
   MCP = 'mcp-service',
+  BILLING = 'core-billing-service',
 }
 
 export const PROD_ORIGINS = [
@@ -142,6 +144,15 @@ export const SERVICES: ServiceConfig[] = [
       local: 'http://localhost:8011',
       dev: 'https://dev.internal.mcp.crowai.dev',
       prod: 'https://internal.mcp.crowai.dev',
+    },
+  },
+  {
+    name: ServiceName.BILLING,
+    path: ServicePath.BILLING,
+    urls: {
+      local: 'http://localhost:8012',
+      dev: 'https://dev.internal.billing.crowai.dev',
+      prod: 'https://internal.billing.crowai.dev',
     },
   },
 ];
