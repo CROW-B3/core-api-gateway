@@ -8,7 +8,11 @@ import {
   forwardRequest,
 } from './lib/router';
 
-const KEEP_SERVICE_PATH = [ServicePath.AUTH];
+const KEEP_SERVICE_PATH = [
+  ServicePath.AUTH,
+  ServicePath.USERS,
+  ServicePath.ORGANIZATIONS,
+];
 
 export async function handleRequest(c: Context<{ Bindings: Environment }>) {
   const path = c.req.path;
