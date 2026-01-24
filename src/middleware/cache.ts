@@ -28,9 +28,10 @@ export async function cacheMiddleware(
   const cachedResponse = await getCachedResponse(c.env, cacheKey);
   if (cachedResponse) return cachedResponse;
 
-  const response = await next();
+  await next();
 
-  if (shouldCache(c.req.raw, response)) {
+  const response = c.res;
+  if (response && shouldCache(c.req.raw, response)) {
     return setCachedResponse(c.env, cacheKey, response);
   }
 
