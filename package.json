@@ -13,8 +13,8 @@
     "format": "bun run prettier src/ --write"
   },
   "dependencies": {
-    "@antfu/eslint-config": "^6.7.3",
-    "@hono/swagger-ui": "^0.5.3",
+    "@d3avarja/try-catch": "^0.0.1",
+    "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@hono/zod-openapi": "^1.2.0",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.3",
