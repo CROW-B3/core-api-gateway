@@ -11,6 +11,7 @@
     "format": "bun run prettier src/ --write"
   },
   "dependencies": {
+    "@d3avarja/try-catch": "^0.0.1",
     "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@hono/zod-openapi": "^1.2.0",
     "hono": "^4.11.3",
