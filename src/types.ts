@@ -1,8 +1,16 @@
-import { z } from '@hono/zod-openapi';
-export interface Environment {}
+export type ServiceEnvironment = 'local' | 'dev' | 'prod';
 
-export const HelloWorldSchema = z
-  .object({
-    text: z.string(),
-  })
-  .openapi('User');
+export interface ServiceConfig {
+  name: string;
+  path: string;
+  urls: {
+    local: string;
+    dev: string;
+    prod: string;
+  };
+}
+
+export interface Environment {
+  CACHE: KVNamespace;
+  ENVIRONMENT: ServiceEnvironment;
+}
