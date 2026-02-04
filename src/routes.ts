@@ -1,14 +1,21 @@
-import { createRoute } from '@hono/zod-openapi';
-import { HelloWorldSchema } from './types';
+import type { Context } from 'hono';
+import type { Environment } from './types';
+import {
+  buildForwardPath,
+  extractVersion,
+  findServiceByPath,
+  forwardRequest,
+} from './lib/router';
 
-export const HelloWorldRoute = createRoute({
-  method: 'get',
-  path: '/',
-  request: {},
-  responses: {
-    200: {
-      content: { 'application/json': { schema: HelloWorldSchema } },
-      description: 'Hello World',
-    },
-  },
-});
+export async function handleRequest(c: Context<{ Bindings: Environment }>) {
+  const path = c.req.path;
+  const version = extractVersion(path);
+  const service = findServiceByPath(path);
+
+  if (!service || !version) {
+    return c.json({ error: 'Not Found', message: 'Service not found' }, 404);
+  }
+
+  const forwardPath = buildForwardPath(path);
+  return forwardRequest(c.req.raw, service, c.env, forwardPath, version);
+}

@@ -8,55 +8,39 @@
     "enabled": true,
     "head_sampling_rate": 1,
   },
-  "d1_databases": [
+  "vars": {
+    "ENVIRONMENT": "prod",
+  },
+  "kv_namespaces": [
     {
-      "binding": "DB",
-      "database_name": "crow-core-api-gateway-db",
-      "database_id": "427db2fd-8f19-44af-821d-933ebdc822b1"
-    }
+      "binding": "CACHE",
+      "id": "d0ebb3b8538144e3b2bb944fd77e87cc",
+    },
   ],
-  "r2_buckets": [
-    {
-      "binding": "R2_BUCKET",
-      "bucket_name": "crow-core-api-gateway-store"
-    }
-  ],
-  "routes": [
-    { "pattern": "api.crowai.dev", "custom_domain": true }
-  ],
+  "routes": [{ "pattern": "api.crowai.dev", "custom_domain": true }],
   "env": {
     "dev": {
-      "routes": [
-        { "pattern": "dev.api.crowai.dev", "custom_domain": true }
-      ],
-      "d1_databases": [
+      "vars": {
+        "ENVIRONMENT": "dev",
+      },
+      "routes": [{ "pattern": "dev.api.crowai.dev", "custom_domain": true }],
+      "kv_namespaces": [
         {
-          "binding": "DB",
-          "database_name": "crow-core-api-gateway-db-dev",
-          "database_id": "116bcff4-66c4-48c2-a7a3-f34b55daddcc"
-        }
+          "binding": "CACHE",
+          "id": "eb070e3c157545b18cb12d53427be411",
+        },
       ],
-      "r2_buckets": [
-        {
-          "binding": "R2_BUCKET",
-          "bucket_name": "crow-core-api-gateway-store-dev"
-        }
-      ]
     },
     "local": {
-      "d1_databases": [
+      "vars": {
+        "ENVIRONMENT": "local",
+      },
+      "kv_namespaces": [
         {
-          "binding": "DB",
-          "database_name": "crow-core-api-gateway-db-local",
-          "database_id": "95b55368-e9b1-4830-a073-75e9a9903058"
-        }
+          "binding": "CACHE",
+          "id": "261906828009411c8864b815f4289381",
+        },
       ],
-      "r2_buckets": [
-        {
-          "binding": "R2_BUCKET",
-          "bucket_name": "crow-core-api-gateway-store-local"
-        }
-      ]
     },
   },
 }
