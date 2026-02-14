@@ -2,16 +2,16 @@ import type { Environment } from '../types';
 import { convertHeadersToRecord } from '../utils/headers';
 import { logger } from './logger';
 
-interface CachedResponse {
+interface CachedResponseData {
   body: string;
   status: number;
   headers: Record<string, string>;
   cachedAt: number;
 }
 
-const DEFAULT_TTL = 300;
+const DEFAULT_CACHE_TIME_TO_LIVE = 300;
 
-export const getCacheKey = (
+export const buildCacheKey = (
   request: Request,
   service: string,
   version: string
@@ -33,7 +33,7 @@ const buildCachedResponseHeaders = (
   return responseHeaders;
 };
 
-export const getCachedResponse = async (
+export const fetchCachedResponse = async (
   env: Environment,
   cacheKey: string
 ): Promise<Response | null> => {
@@ -41,7 +41,7 @@ export const getCachedResponse = async (
     const cached = (await env.CACHE.get(
       cacheKey,
       'json'
-    )) as CachedResponse | null;
+    )) as CachedResponseData | null;
 
     if (!cached) {
       return null;
@@ -59,7 +59,7 @@ export const getCachedResponse = async (
   }
 };
 
-const buildResponseForCache = (
+const buildResponseWithCacheMissHeader = (
   body: string,
   status: number,
   headers: Record<string, string>
@@ -73,58 +73,61 @@ const buildResponseForCache = (
   });
 };
 
-export const setCachedResponse = async (
+export const storeCachedResponse = async (
   env: Environment,
   cacheKey: string,
   response: Response,
-  ttl: number = DEFAULT_TTL
+  timeToLive: number = DEFAULT_CACHE_TIME_TO_LIVE
 ): Promise<Response> => {
   try {
     const body = await response.text();
     const headers = convertHeadersToRecord(response.headers);
 
-    const cached: CachedResponse = {
+    const cachedData: CachedResponseData = {
       body,
       status: response.status,
       headers,
       cachedAt: Date.now(),
     };
 
-    await env.CACHE.put(cacheKey, JSON.stringify(cached), {
-      expirationTtl: ttl,
+    await env.CACHE.put(cacheKey, JSON.stringify(cachedData), {
+      expirationTtl: timeToLive,
     });
 
-    return buildResponseForCache(body, response.status, headers);
+    return buildResponseWithCacheMissHeader(body, response.status, headers);
   } catch (error) {
     logger.error('Cache write error', error);
     return response;
   }
 };
 
-const hasNoStoreCacheControl = (cacheControl: string | null): boolean => {
+const hasNoStoreCacheControlDirective = (
+  cacheControl: string | null
+): boolean => {
   if (!cacheControl) {
     return false;
   }
-
   return cacheControl.includes('no-store') || cacheControl.includes('private');
 };
 
-const isSuccessfulResponse = (status: number): boolean => {
-  return status >= 200 && status < 300;
-};
+const isSuccessfulHttpStatus = (status: number): boolean =>
+  status >= 200 && status < 300;
 
-export const shouldCache = (request: Request, response: Response): boolean => {
+export const shouldCacheResponse = (
+  request: Request,
+  response: Response
+): boolean => {
   if (request.method !== 'GET') {
     return false;
   }
 
-  if (!isSuccessfulResponse(response.status)) {
+  if (!isSuccessfulHttpStatus(response.status)) {
     return false;
   }
 
   const cacheControl = response.headers.get('Cache-Control');
 
-  if (hasNoStoreCacheControl(cacheControl)) {
+  if (hasNoStoreCacheControlDirective(cacheControl)) {
     return false;
   }
 
