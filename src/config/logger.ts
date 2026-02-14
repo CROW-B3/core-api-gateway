@@ -1,7 +1,21 @@
 import type { Environment } from '../types';
-import log from 'loglevel';
+import pino from 'pino';
 
-function resolveLogLevel(env: Environment): log.LogLevelDesc {
+const createProductionTransport = () => ({
+  target: 'pino/file',
+  options: { destination: 1 },
+});
+
+const createDevelopmentTransport = () => ({
+  target: 'pino-pretty',
+  options: {
+    colorize: true,
+    translateTime: 'HH:MM:ss',
+    ignore: 'pid,hostname',
+  },
+});
+
+function resolveLogLevel(env: Environment): pino.Level {
   const environment = env.ENVIRONMENT || 'prod';
 
   if (environment === 'local') return 'debug';
@@ -10,16 +24,23 @@ function resolveLogLevel(env: Environment): log.LogLevelDesc {
   return 'warn';
 }
 
-export function createLogger(env: Environment) {
-  log.setLevel(resolveLogLevel(env));
-  return {
-    debug: (msg: string, data?: unknown) =>
-      log.debug(`[gateway] ${msg}`, data ?? ''),
-    info: (msg: string, data?: unknown) =>
-      log.info(`[gateway] ${msg}`, data ?? ''),
-    warn: (msg: string, data?: unknown) =>
-      log.warn(`[gateway] ${msg}`, data ?? ''),
-    error: (msg: string, data?: unknown) =>
-      log.error(`[gateway] ${msg}`, data ?? ''),
-  };
+function resolveTransport(env: Environment): pino.TransportSingleOptions {
+  const environment = env.ENVIRONMENT || 'prod';
+  const isDevelopmentEnvironment =
+    environment === 'local' || environment === 'dev';
+
+  return isDevelopmentEnvironment
+    ? createDevelopmentTransport()
+    : createProductionTransport();
+}
+
+export function createLogger(env: Environment): pino.Logger {
+  return pino({
+    level: resolveLogLevel(env),
+    transport: resolveTransport(env),
+    formatters: {
+      level: label => ({ level: label }),
+    },
+    timestamp: pino.stdTimeFunctions.isoTime,
+  });
 }
