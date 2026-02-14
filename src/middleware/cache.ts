@@ -1,38 +1,40 @@
 import type { Context, Next } from 'hono';
 import type { Environment } from '../types';
 import {
-  getCachedResponse,
-  getCacheKey,
-  setCachedResponse,
-  shouldCache,
+  buildCacheKey,
+  fetchCachedResponse,
+  shouldCacheResponse,
+  storeCachedResponse,
 } from '../lib/cache';
 import { extractVersion, findServiceByPath } from '../lib/router';
 
 export async function cacheMiddleware(
-  c: Context<{ Bindings: Environment }>,
+  context: Context<{ Bindings: Environment }>,
   next: Next
 ) {
-  if (c.req.method !== 'GET') {
+  if (context.req.method !== 'GET') {
     return next();
   }
 
-  const path = c.req.path;
-  const version = extractVersion(path);
-  const service = findServiceByPath(path);
+  const requestPath = context.req.path;
+  const version = extractVersion(requestPath);
+  const service = findServiceByPath(requestPath);
 
   if (!service || !version) {
     return next();
   }
 
-  const cacheKey = getCacheKey(c.req.raw, service.path, version);
-  const cachedResponse = await getCachedResponse(c.env, cacheKey);
-  if (cachedResponse) return cachedResponse;
+  const cacheKey = buildCacheKey(context.req.raw, service.path, version);
+  const cachedResponse = await fetchCachedResponse(context.env, cacheKey);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
 
   await next();
 
-  const response = c.res;
-  if (response && shouldCache(c.req.raw, response)) {
-    return setCachedResponse(c.env, cacheKey, response);
+  const response = context.res;
+  if (response && shouldCacheResponse(context.req.raw, response)) {
+    return storeCachedResponse(context.env, cacheKey, response);
   }
 
   return response;
