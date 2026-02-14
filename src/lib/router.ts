@@ -1,13 +1,10 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
-import ky from 'ky';
 import {
-  any,
   buildRegExp,
   capture,
   digit,
   oneOrMore,
   startOfString,
-  zeroOrMore,
 } from 'ts-regex-builder';
 import { SERVICES } from '../constants';
 import { createForwardHeaders, createResponseHeaders } from '../utils/headers';
@@ -28,16 +25,7 @@ const VERSION_REGEX = buildRegExp([
   '/',
 ]);
 
-const FORWARD_PATH_REGEX = buildRegExp([
-  startOfString,
-  '/api/v',
-  oneOrMore(digit),
-  '/',
-  oneOrMore(/[^/]/),
-  capture(zeroOrMore(any)),
-]);
-
-export const getServiceUrl = (
+export const resolveServiceUrl = (
   service: ServiceConfig,
   env: Environment
 ): string => {
@@ -46,13 +34,12 @@ export const getServiceUrl = (
 
 export const findServiceByPath = (path: string): ServiceConfig | null => {
   const match = path.match(SERVICE_PATH_REGEX);
-
   if (!match) {
     return null;
   }
 
   const servicePath = match[1];
-  return SERVICES.find(s => s.path === servicePath) || null;
+  return SERVICES.find(service => service.path === servicePath) || null;
 };
 
 export const extractVersion = (path: string): string | null => {
@@ -76,35 +63,50 @@ const buildTargetUrl = (
   return targetUrl;
 };
 
-const createServiceUnavailableResponse = (serviceName: string): Response => {
-  return new Response(
+const createServiceUnavailableResponse = (serviceName: string): Response =>
+  new Response(
     JSON.stringify({
       error: 'Service Unavailable',
       message: `${serviceName} is not responding`,
     }),
     { status: 503, headers: { 'Content-Type': 'application/json' } }
   );
-};
+
+const isRequestMethodWithBody = (method: string): boolean =>
+  method !== 'GET' && method !== 'HEAD';
 
 export const forwardRequest = async (
   request: Request,
   service: ServiceConfig,
   env: Environment,
   forwardPath: string,
-  version: string
+  version: string,
+  authenticationToken?: string
 ): Promise<Response> => {
-  const serviceUrl = getServiceUrl(service, env);
-  const url = new URL(request.url);
-  const targetUrl = buildTargetUrl(serviceUrl, version, forwardPath, url.search);
-  const headers = createForwardHeaders(request.headers, url, service.name);
+  const serviceUrl = resolveServiceUrl(service, env);
+  const requestUrl = new URL(request.url);
+  const targetUrl = buildTargetUrl(
+    serviceUrl,
+    version,
+    forwardPath,
+    requestUrl.search
+  );
+  const headers = createForwardHeaders(
+    request.headers,
+    requestUrl,
+    service.name
+  );
+
+  if (authenticationToken) {
+    headers.set('Authorization', `Bearer ${authenticationToken}`);
+  }
 
   try {
-    const response = await ky(targetUrl.toString(), {
+    const response = await fetch(targetUrl.toString(), {
       method: request.method,
       headers,
-      body: request.body,
+      body: isRequestMethodWithBody(request.method) ? request.body : undefined,
       redirect: 'manual',
-      throwHttpErrors: false,
     });
 
     const responseHeaders = createResponseHeaders(

@@ -2,6 +2,7 @@ import type { ServiceConfig } from './types';
 
 export enum ServicePath {
   AUTH = 'auth',
+  BETTER_AUTH = 'better-auth',
   USERS = 'users',
   PRODUCTS = 'products',
   ORGANIZATIONS = 'organizations',
@@ -13,6 +14,7 @@ export enum ServicePath {
   QNA = 'qna',
   MCP = 'mcp',
   BILLING = 'billing',
+  CRAWLER_JOBS = 'crawler-jobs',
 }
 
 export enum ServiceName {
@@ -32,9 +34,11 @@ export enum ServiceName {
 
 export const PROD_ORIGINS = [
   'https://crowai.dev',
+  'https://auth.crowai.dev',
   'https://app.crowai.dev',
   'https://api.crowai.dev',
   'https://dev.crowai.dev',
+  'https://dev.auth.crowai.dev',
   'https://dev.app.crowai.dev',
   'https://dev.api.crowai.dev',
   'https://internal.auth-api.crowai.dev',
@@ -86,6 +90,15 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.AUTH,
     path: ServicePath.AUTH,
+    urls: {
+      local: 'http://localhost:8001',
+      dev: 'https://dev.internal.auth-api.crowai.dev',
+      prod: 'https://internal.auth-api.crowai.dev',
+    },
+  },
+  {
+    name: ServiceName.AUTH,
+    path: ServicePath.BETTER_AUTH,
     urls: {
       local: 'http://localhost:8001',
       dev: 'https://dev.internal.auth-api.crowai.dev',
@@ -189,6 +202,15 @@ export const SERVICES: ServiceConfig[] = [
       local: 'http://localhost:8012',
       dev: 'https://dev.internal.billing.crowai.dev',
       prod: 'https://internal.billing.crowai.dev',
+    },
+  },
+  {
+    name: ServiceName.PRODUCTS,
+    path: ServicePath.CRAWLER_JOBS,
+    urls: {
+      local: 'http://localhost:8003',
+      dev: 'https://dev.internal.products.crowai.dev',
+      prod: 'https://internal.products.crowai.dev',
     },
   },
 ];

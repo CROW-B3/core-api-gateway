@@ -3,21 +3,23 @@ import { Hono } from 'hono';
 import { cache } from 'hono/cache';
 import { logger as honoLogger } from 'hono/logger';
 import { logger } from './lib/logger';
-import { authMiddleware } from './middleware/auth';
+import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
-import { rateLimitMiddleware } from './middleware/rate-limit';
+import { publicEndpointRateLimitMiddleware } from './middleware/rate-limit';
 import { handleRequest } from './routes';
 
 const app = new Hono<{ Bindings: Environment }>();
 
 app.use(honoLogger());
-app.use('/api/*', rateLimitMiddleware);
 
-app.use('/api/*', async (c, next) => {
-  const corsMiddleware = createCorsMiddleware(c.env);
-  return corsMiddleware(c, next);
+app.use('/api/*', async (context, next) => {
+  const corsMiddleware = createCorsMiddleware(context.env);
+  return await corsMiddleware(context, next);
 });
+
+app.use('/health', publicEndpointRateLimitMiddleware);
+app.use('/', publicEndpointRateLimitMiddleware);
 
 app.get(
   '/',
@@ -25,7 +27,7 @@ app.get(
     cacheName: 'core-api-gateway',
     cacheControl: 'max-age=300',
   }),
-  c => c.json({ status: 'ok', service: 'core-api-gateway' })
+  context => context.json({ status: 'ok', service: 'core-api-gateway' })
 );
 app.get(
   '/health',
@@ -33,26 +35,43 @@ app.get(
     cacheName: 'core-api-gateway',
     cacheControl: 'max-age=60',
   }),
-  c => c.json({ status: 'healthy', timestamp: new Date().toISOString() })
+  context =>
+    context.json({ status: 'healthy', timestamp: new Date().toISOString() })
 );
 
+app.all(
+  '/api/:version{v[0-9]+}/auth/onboarding/*',
+  authenticateRequestMiddleware,
+  handleRequest
+);
+app.all(
+  '/api/:version{v[0-9]+}/auth/team-invitations/*',
+  authenticateRequestMiddleware,
+  handleRequest
+);
+
+app.all('/api/:version{v[0-9]+}/better-auth/*', handleRequest);
+app.all('/api/:version{v[0-9]+}/auth/jwt/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth', handleRequest);
 
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
-  authMiddleware,
+  authenticateRequestMiddleware,
   cacheMiddleware,
   handleRequest
 );
 
-app.notFound(c =>
-  c.json({ error: 'Not Found', message: 'Route not found' }, 404)
+app.notFound(context =>
+  context.json({ error: 'Not Found', message: 'Route not found' }, 404)
 );
 
-app.onError((err, c) => {
-  logger.error('Gateway error', err);
-  return c.json({ error: 'Internal Server Error', message: err.message }, 500);
+app.onError((error, context) => {
+  logger.error('Gateway error', error);
+  return context.json(
+    { error: 'Internal Server Error', message: error.message },
+    500
+  );
 });
 
 export default app;
