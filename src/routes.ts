@@ -7,15 +7,29 @@ import {
   forwardRequest,
 } from './lib/router';
 
-export async function handleRequest(c: Context<{ Bindings: Environment }>) {
-  const path = c.req.path;
-  const version = extractVersion(path);
-  const service = findServiceByPath(path);
+export async function handleRequest(
+  context: Context<{ Bindings: Environment }>
+) {
+  const requestPath = context.req.path;
+  const version = extractVersion(requestPath);
+  const service = findServiceByPath(requestPath);
 
   if (!service || !version) {
-    return c.json({ error: 'Not Found', message: 'Service not found' }, 404);
+    return context.json(
+      { error: 'Not Found', message: 'Service not found' },
+      404
+    );
   }
 
-  const forwardPath = buildForwardPath(path);
-  return forwardRequest(c.req.raw, service, c.env, forwardPath, version);
+  const forwardPath = buildForwardPath(requestPath);
+  const authenticationToken = context.get('token');
+
+  return forwardRequest(
+    context.req.raw,
+    service,
+    context.env,
+    forwardPath,
+    version,
+    authenticationToken
+  );
 }

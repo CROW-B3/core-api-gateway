@@ -1,9 +1,6 @@
 import type { Environment } from '../types';
 
-/**
- * Required environment variables for API gateway
- */
-const REQUIRED_ENV_VARS = [
+const REQUIRED_ENVIRONMENT_VARIABLES = [
   'AUTH_SERVICE_URL',
   'USER_SERVICE_URL',
   'ORGANIZATION_SERVICE_URL',
@@ -12,73 +9,80 @@ const REQUIRED_ENV_VARS = [
   'PRODUCT_SERVICE_URL',
 ] as const;
 
-type RequiredEnvVar = (typeof REQUIRED_ENV_VARS)[number];
+const isMissingValue = (value: unknown): boolean =>
+  value === undefined || value === null;
 
-/**
- * Validates that all required environment variables are present
- * @throws Error if any required variables are missing
- */
-export function validateEnv(env: Partial<Environment>): void {
-  const missing: string[] = [];
-  const empty: string[] = [];
+const isEmptyStringValue = (value: unknown): boolean =>
+  typeof value === 'string' && value.trim() === '';
 
-  for (const key of REQUIRED_ENV_VARS) {
-    const value = env[key as keyof Environment];
+const findMissingVariables = (env: Partial<Environment>): string[] =>
+  REQUIRED_ENVIRONMENT_VARIABLES.filter(key =>
+    isMissingValue(env[key as keyof Environment])
+  );
 
-    if (value === undefined || value === null) {
-      missing.push(key);
-    } else if (typeof value === 'string' && value.trim() === '') {
-      empty.push(key);
-    }
-  }
+const findEmptyVariables = (env: Partial<Environment>): string[] =>
+  REQUIRED_ENVIRONMENT_VARIABLES.filter(key =>
+    isEmptyStringValue(env[key as keyof Environment])
+  );
 
-  const errors: string[] = [];
+const buildValidationErrorMessages = (
+  missingVariables: string[],
+  emptyVariables: string[]
+): string[] => {
+  const errorMessages: string[] = [];
 
-  if (missing.length > 0) {
-    errors.push(`Missing required environment variables: ${missing.join(', ')}`);
-  }
-
-  if (empty.length > 0) {
-    errors.push(`Empty environment variables: ${empty.join(', ')}`);
-  }
-
-  if (errors.length > 0) {
-    throw new Error(
-      `Environment validation failed:\n${errors.join('\n')}\n\n` +
-        'Please ensure all required environment variables are set in your .env file or deployment configuration.'
+  if (missingVariables.length > 0) {
+    errorMessages.push(
+      `Missing required environment variables: ${missingVariables.join(', ')}`
     );
   }
+
+  if (emptyVariables.length > 0) {
+    errorMessages.push(
+      `Empty environment variables: ${emptyVariables.join(', ')}`
+    );
+  }
+
+  return errorMessages;
+};
+
+export function validateEnvironmentVariables(env: Partial<Environment>): void {
+  const missingVariables = findMissingVariables(env);
+  const emptyVariables = findEmptyVariables(env);
+  const validationErrors = buildValidationErrorMessages(
+    missingVariables,
+    emptyVariables
+  );
+
+  if (validationErrors.length === 0) {
+    return;
+  }
+
+  throw new Error(
+    `Environment validation failed:\n${validationErrors.join('\n')}\n\n` +
+      'Please ensure all required environment variables are set in your .env file or deployment configuration.'
+  );
 }
 
-/**
- * Get environment-specific configuration
- */
-export function getEnvironment(env: Environment): 'local' | 'dev' | 'prod' {
+export function resolveEnvironmentType(
+  env: Environment
+): 'local' | 'dev' | 'prod' {
   return (env.ENVIRONMENT as 'local' | 'dev' | 'prod') || 'prod';
 }
 
-/**
- * Check if running in production
- */
-export function isProduction(env: Environment): boolean {
-  return getEnvironment(env) === 'prod';
+export function isProductionEnvironment(env: Environment): boolean {
+  return resolveEnvironmentType(env) === 'prod';
 }
 
-/**
- * Check if running in development
- */
-export function isDevelopment(env: Environment): boolean {
-  const envType = getEnvironment(env);
-  return envType === 'dev' || envType === 'local';
+export function isDevelopmentEnvironment(env: Environment): boolean {
+  const environmentType = resolveEnvironmentType(env);
+  return environmentType === 'dev' || environmentType === 'local';
 }
 
-/**
- * Get CORS allowed origins based on environment
- */
-export function getAllowedOrigins(env: Environment): string[] {
-  const envType = getEnvironment(env);
+export function fetchAllowedOriginsByEnvironment(env: Environment): string[] {
+  const environmentType = resolveEnvironmentType(env);
 
-  switch (envType) {
+  switch (environmentType) {
     case 'local':
       return [
         'http://localhost:3000',
