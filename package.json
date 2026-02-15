@@ -18,6 +18,7 @@
   "dependencies": {
     "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@hono/zod-openapi": "^1.2.0",
+    "@microlabs/otel-cf-workers": "^1.0.0-rc.52",
     "hono": "^4.11.3",
     "hono-rate-limiter": "^0.5.3",
     "ky": "^1.14.2",

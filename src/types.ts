@@ -13,4 +13,6 @@ export interface ServiceConfig {
 export interface Environment {
   CACHE: KVNamespace;
   ENVIRONMENT: ServiceEnvironment;
+  AXIOM_API_TOKEN: string;
+  AXIOM_DATASET: string;
 }
