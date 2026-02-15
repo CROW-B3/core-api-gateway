@@ -1,8 +1,10 @@
 import type { Environment } from './types';
+import { instrument } from '@microlabs/otel-cf-workers';
 import { Hono } from 'hono';
 import { cache } from 'hono/cache';
 import { logger as honoLogger } from 'hono/logger';
 import { logger } from './lib/logger';
+import { createOtelConfig } from './lib/otel';
 import { authMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
@@ -55,4 +57,4 @@ app.onError((err, c) => {
   return c.json({ error: 'Internal Server Error', message: err.message }, 500);
 });
 
-export default app;
+export default instrument(app, createOtelConfig('crow-core-api-gateway'));
