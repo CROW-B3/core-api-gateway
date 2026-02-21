@@ -6,7 +6,7 @@ import { logger } from './lib/logger';
 import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
-import { publicEndpointRateLimitMiddleware } from './middleware/rate-limit';
+
 import { handleRequest } from './routes';
 
 const app = new Hono<{ Bindings: Environment }>();
@@ -17,9 +17,6 @@ app.use('/api/*', async (context, next) => {
   const corsMiddleware = createCorsMiddleware(context.env);
   return await corsMiddleware(context, next);
 });
-
-app.use('/health', publicEndpointRateLimitMiddleware);
-app.use('/', publicEndpointRateLimitMiddleware);
 
 app.get(
   '/',
