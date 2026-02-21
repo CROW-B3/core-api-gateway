@@ -3,7 +3,7 @@ import type { Environment } from '../types';
 
 declare module 'hono' {
   interface ContextVariableMap {
-    organizationId: string | null;
+    organizationId: string;
   }
 }
 
@@ -104,7 +104,7 @@ export async function injectOrganizationContext(
   const requestPath = context.req.path;
 
   if (matchesSkipPattern(requestPath)) {
-    context.set('organizationId', null);
+    context.set('organizationId', '');
     return next();
   }
 
@@ -116,6 +116,6 @@ export async function injectOrganizationContext(
     authServiceUrl
   );
 
-  context.set('organizationId', organizationId);
+  context.set('organizationId', organizationId ?? '');
   return next();
 }
