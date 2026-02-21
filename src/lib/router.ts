@@ -91,12 +91,18 @@ export const forwardRequest = async (
   service: ServiceConfig,
   env: Environment,
   forwardPath: string,
-  version: string
+  version: string,
+  authenticationToken?: string,
+  organizationId?: string | null
 ): Promise<Response> => {
   const serviceUrl = getServiceUrl(service, env);
   const url = new URL(request.url);
   const targetUrl = buildTargetUrl(serviceUrl, version, forwardPath, url.search);
   const headers = createForwardHeaders(request.headers, url, service.name);
+
+  if (organizationId) {
+    headers.set('X-Organization-Id', organizationId);
+  }
 
   try {
     const response = await ky(targetUrl.toString(), {

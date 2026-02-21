@@ -13,4 +13,5 @@ export interface ServiceConfig {
 export interface Environment {
   CACHE: KVNamespace;
   ENVIRONMENT: ServiceEnvironment;
+  AUTH_SERVICE_URL: string;
 }

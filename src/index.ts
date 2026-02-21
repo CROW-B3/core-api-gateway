@@ -6,7 +6,8 @@ import { logger } from './lib/logger';
 import { authMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
-import { rateLimitMiddleware } from './middleware/rate-limit';
+import { injectOrganizationContext } from './middleware/organization';
+import { publicEndpointRateLimitMiddleware } from './middleware/rate-limit';
 import { handleRequest } from './routes';
 
 const app = new Hono<{ Bindings: Environment }>();
@@ -41,7 +42,8 @@ app.all('/api/:version{v[0-9]+}/auth', handleRequest);
 
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
-  authMiddleware,
+  authenticateRequestMiddleware,
+  injectOrganizationContext,
   cacheMiddleware,
   handleRequest
 );

@@ -16,6 +16,17 @@ export async function handleRequest(c: Context<{ Bindings: Environment }>) {
     return c.json({ error: 'Not Found', message: 'Service not found' }, 404);
   }
 
-  const forwardPath = buildForwardPath(path);
-  return forwardRequest(c.req.raw, service, c.env, forwardPath, version);
+  const forwardPath = buildForwardPath(requestPath);
+  const authenticationToken = context.get('token');
+  const organizationId = context.get('organizationId');
+
+  return forwardRequest(
+    context.req.raw,
+    service,
+    context.env,
+    forwardPath,
+    version,
+    authenticationToken,
+    organizationId
+  );
 }
