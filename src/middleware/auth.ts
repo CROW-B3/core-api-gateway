@@ -1,11 +1,16 @@
 import type { Context, Next } from 'hono';
 import type { Environment } from '../types';
-import { createAnonymousSession, fetchTokenFromSession } from '../lib/auth';
+import {
+  createAnonymousSession,
+  fetchOrganizationIdFromSession,
+  fetchTokenFromSession,
+} from '../lib/auth';
 import { extractClientIpAddressFromRequest } from '../lib/utils';
 
 declare module 'hono' {
   interface ContextVariableMap {
     token: string;
+    organizationId: string;
   }
 }
 
@@ -21,6 +26,15 @@ const attemptSessionTokenRetrieval = async (
     return false;
   }
   context.set('token', token);
+
+  const organizationId = await fetchOrganizationIdFromSession(
+    context.env,
+    cookieHeader
+  );
+  if (organizationId) {
+    context.set('organizationId', organizationId);
+  }
+
   return true;
 };
 
