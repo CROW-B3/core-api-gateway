@@ -80,7 +80,8 @@ export const storeCachedResponse = async (
   timeToLive: number = DEFAULT_CACHE_TIME_TO_LIVE
 ): Promise<Response> => {
   try {
-    const body = await response.text();
+    const cloned = response.clone();
+    const body = await cloned.text();
     const headers = convertHeadersToRecord(response.headers);
 
     const cachedData: CachedResponseData = {
