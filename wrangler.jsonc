@@ -10,6 +10,7 @@
   },
   "vars": {
     "ENVIRONMENT": "prod",
+    "AUTH_SERVICE_URL": "https://auth.crowai.dev",
   },
   "kv_namespaces": [
     {
@@ -22,6 +23,7 @@
     "dev": {
       "vars": {
         "ENVIRONMENT": "dev",
+        "AUTH_SERVICE_URL": "https://dev.auth.crowai.dev",
       },
       "routes": [{ "pattern": "dev.api.crowai.dev", "custom_domain": true }],
       "kv_namespaces": [

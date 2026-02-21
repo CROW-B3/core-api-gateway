@@ -81,7 +81,8 @@ export const forwardRequest = async (
   env: Environment,
   forwardPath: string,
   version: string,
-  authenticationToken?: string
+  authenticationToken?: string,
+  organizationId?: string | null
 ): Promise<Response> => {
   const serviceUrl = resolveServiceUrl(service, env);
   const requestUrl = new URL(request.url);
@@ -99,6 +100,10 @@ export const forwardRequest = async (
 
   if (authenticationToken) {
     headers.set('Authorization', `Bearer ${authenticationToken}`);
+  }
+
+  if (organizationId) {
+    headers.set('X-Organization-Id', organizationId);
   }
 
   try {

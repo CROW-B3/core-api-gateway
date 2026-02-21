@@ -23,6 +23,7 @@ export async function handleRequest(
 
   const forwardPath = buildForwardPath(requestPath);
   const authenticationToken = context.get('token');
+  const organizationId = context.get('organizationId');
 
   return forwardRequest(
     context.req.raw,
@@ -30,6 +31,7 @@ export async function handleRequest(
     context.env,
     forwardPath,
     version,
-    authenticationToken
+    authenticationToken,
+    organizationId
   );
 }
