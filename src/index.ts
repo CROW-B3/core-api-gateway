@@ -6,6 +6,7 @@ import { logger } from './lib/logger';
 import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
+import { injectOrganizationContext } from './middleware/organization';
 import { publicEndpointRateLimitMiddleware } from './middleware/rate-limit';
 import { handleRequest } from './routes';
 
@@ -58,6 +59,7 @@ app.all('/api/:version{v[0-9]+}/auth', handleRequest);
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
   authenticateRequestMiddleware,
+  injectOrganizationContext,
   cacheMiddleware,
   handleRequest
 );
