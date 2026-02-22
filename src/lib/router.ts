@@ -131,10 +131,6 @@ export const forwardRequest = async (
       version
     );
 
-    // Buffer the response body so it is a string rather than a ReadableStream.
-    // This prevents "ReadableStream is disturbed" errors when the cache
-    // middleware later tries to clone the response after Hono has already
-    // started piping the stream to the client.
     const responseBody = await response.text();
 
     return new Response(responseBody, {

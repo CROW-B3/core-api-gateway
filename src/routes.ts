@@ -22,8 +22,6 @@ export async function handleRequest(
   }
 
   const forwardPath = buildForwardPath(requestPath);
-  // Prefer the original Bearer JWT from the incoming request over the anonymous
-  // session token set by the auth middleware, so JWTs are forwarded as-is.
   const originalBearer = context.req
     .header('Authorization')
     ?.startsWith('Bearer ')
