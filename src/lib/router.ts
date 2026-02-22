@@ -91,21 +91,37 @@ export const forwardRequest = async (
   service: ServiceConfig,
   env: Environment,
   forwardPath: string,
-  version: string
+  version: string,
+  authenticationToken?: string,
+  organizationId?: string | null,
+  userId?: string | null
 ): Promise<Response> => {
   const serviceUrl = getServiceUrl(service, env);
   const url = new URL(request.url);
   const targetUrl = buildTargetUrl(serviceUrl, version, forwardPath, url.search);
   const headers = createForwardHeaders(request.headers, url, service.name);
 
+  if (organizationId) {
+    headers.set('X-Organization-Id', organizationId);
+  }
+
+  if (userId) {
+    headers.set('X-User-Id', userId);
+  }
+
   try {
-    const response = await ky(targetUrl.toString(), {
+    const fetchOptions: RequestInit = {
       method: request.method,
       headers,
-      body: request.body,
       redirect: 'manual',
-      throwHttpErrors: false,
-    });
+    };
+
+    if (isRequestMethodWithBody(request.method)) {
+      fetchOptions.body = request.body;
+      (fetchOptions as RequestInit & { duplex: string }).duplex = 'half';
+    }
+
+    const response = await fetch(targetUrl.toString(), fetchOptions);
 
     const responseHeaders = createResponseHeaders(
       response.headers,
@@ -113,7 +129,13 @@ export const forwardRequest = async (
       version
     );
 
-    return new Response(response.body, {
+    // Buffer the response body so it is a string rather than a ReadableStream.
+    // This prevents "ReadableStream is disturbed" errors when the cache
+    // middleware later tries to clone the response after Hono has already
+    // started piping the stream to the client.
+    const responseBody = await response.text();
+
+    return new Response(responseBody, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,

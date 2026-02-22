@@ -10,6 +10,7 @@
   },
   "vars": {
     "ENVIRONMENT": "prod",
+    "AUTH_SERVICE_URL": "https://auth.crowai.dev",
   },
   "kv_namespaces": [
     {
@@ -22,10 +23,12 @@
   ],
   "env": {
     "dev": {
-      "routes": [
-        { "pattern": "dev.api.crowai.dev", "custom_domain": true }
-      ],
-      "d1_databases": [
+      "vars": {
+        "ENVIRONMENT": "dev",
+        "AUTH_SERVICE_URL": "https://dev.auth.crowai.dev",
+      },
+      "routes": [{ "pattern": "dev.api.crowai.dev", "custom_domain": true }],
+      "kv_namespaces": [
         {
           "binding": "CACHE",
           "id": "eb070e3c157545b18cb12d53427be411",

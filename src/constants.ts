@@ -40,7 +40,7 @@ export const PROD_ORIGINS = [
   'https://internal.auth-api.crowai.dev',
   'https://internal.users.crowai.dev',
   'https://internal.products.crowai.dev',
-  'https://internal.organizations.crowai.dev',
+  'https://internal.orgs.crowai.dev',
   'https://internal.analytics.crowai.dev',
   'https://internal.notifications.crowai.dev',
   'https://internal.patterns.crowai.dev',
@@ -52,14 +52,14 @@ export const PROD_ORIGINS = [
   'https://dev.internal.auth-api.crowai.dev',
   'https://dev.internal.users.crowai.dev',
   'https://dev.internal.products.crowai.dev',
-  'https://dev.internal.organizations.crowai.dev',
+  'https://dev.internal.orgs.crowai.dev',
   'https://dev.internal.analytics.crowai.dev',
   'https://dev.internal.notifications.crowai.dev',
   'https://dev.internal.patterns.crowai.dev',
   'https://dev.internal.interactions.crowai.dev',
   'https://dev.internal.chat.crowai.dev',
   'https://dev.internal.qna.crowai.dev',
-  'https://dev.internal.mcp.crowai.dev',
+  'https://dev.mcp.crowai.dev',
   'https://dev.internal.billing.crowai.dev',
 ];
 
@@ -115,8 +115,8 @@ export const SERVICES: ServiceConfig[] = [
     path: ServicePath.ORGANIZATIONS,
     urls: {
       local: 'http://localhost:8004',
-      dev: 'https://dev.internal.organizations.crowai.dev',
-      prod: 'https://internal.organizations.crowai.dev',
+      dev: 'https://dev.internal.orgs.crowai.dev',
+      prod: 'https://internal.orgs.crowai.dev',
     },
   },
   {
@@ -178,7 +178,7 @@ export const SERVICES: ServiceConfig[] = [
     path: ServicePath.MCP,
     urls: {
       local: 'http://localhost:8011',
-      dev: 'https://dev.internal.mcp.crowai.dev',
+      dev: 'https://dev.mcp.crowai.dev',
       prod: 'https://internal.mcp.crowai.dev',
     },
   },
