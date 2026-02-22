@@ -30,9 +30,11 @@ export async function cacheMiddleware(
 
   await next();
 
-  const response = c.res;
-  if (response && shouldCache(c.req.raw, response)) {
-    return setCachedResponse(c.env, cacheKey, response);
+  const response = context.res;
+  if (response && shouldCacheResponse(context.req.raw, response)) {
+    // Clone the response before reading its body for caching,
+    // so the original body stream remains available for the client.
+    return storeCachedResponse(context.env, cacheKey, response.clone());
   }
 
   return response;
