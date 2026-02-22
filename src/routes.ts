@@ -22,8 +22,16 @@ export async function handleRequest(
   }
 
   const forwardPath = buildForwardPath(requestPath);
-  const authenticationToken = context.get('token');
+  // Prefer the original Bearer JWT from the incoming request over the anonymous
+  // session token set by the auth middleware, so JWTs are forwarded as-is.
+  const originalBearer = context.req
+    .header('Authorization')
+    ?.startsWith('Bearer ')
+    ? context.req.header('Authorization')!.slice(7).trim()
+    : undefined;
+  const authenticationToken = originalBearer || context.get('token');
   const organizationId = context.get('organizationId');
+  const userId = context.get('userId');
 
   return forwardRequest(
     context.req.raw,
@@ -32,6 +40,7 @@ export async function handleRequest(
     forwardPath,
     version,
     authenticationToken,
-    organizationId
+    organizationId,
+    userId
   );
 }
