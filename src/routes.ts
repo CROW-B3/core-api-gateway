@@ -22,7 +22,9 @@ export async function handleRequest(
   }
 
   const forwardPath = buildForwardPath(requestPath);
-  const rawBearer = context.req.header('Authorization')?.startsWith('Bearer ')
+  const originalBearer = context.req
+    .header('Authorization')
+    ?.startsWith('Bearer ')
     ? context.req.header('Authorization')!.slice(7).trim()
     : undefined;
   // Do not forward API keys (crow_* prefix) as Bearer tokens to downstream

@@ -15,6 +15,7 @@ export enum ServicePath {
   MCP = 'mcp',
   BILLING = 'billing',
   CRAWLER_JOBS = 'crawler-jobs',
+  CCTV = 'cctv',
 }
 
 export enum ServiceName {
@@ -30,6 +31,7 @@ export enum ServiceName {
   QNA = 'bff-qna-service',
   MCP = 'mcp-service',
   BILLING = 'core-billing-service',
+  CCTV = 'cctv-ingest-service',
 }
 
 export const PROD_ORIGINS = [
@@ -65,6 +67,8 @@ export const PROD_ORIGINS = [
   'https://dev.internal.qna.crowai.dev',
   'https://dev.mcp.crowai.dev',
   'https://dev.internal.billing.crowai.dev',
+  'https://dev.cctv.crowai.dev',
+  'https://cctv.crowai.dev',
 ];
 
 export const LOCAL_ORIGINS = [
@@ -228,7 +232,6 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.CCTV,
     path: ServicePath.CCTV,
-    requiresAuth: true,
     urls: {
       local: 'http://localhost:8015',
       dev: 'https://dev.cctv.crowai.dev',

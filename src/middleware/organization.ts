@@ -78,7 +78,6 @@ interface ApiKeyVerifyResponse {
 interface ApiKeyContext {
   organizationId: string | null;
   userId: string | null;
-  /** True when the token was recognised as an API key but is revoked / invalid. */
   revoked?: boolean;
 }
 
@@ -179,11 +178,8 @@ const resolveContextFromApiKey = async (
       }
     );
 
-    // A 400 means the payload was malformed — the token is not an API key at all.
     if (response.status === 400) return { organizationId: null, userId: null };
 
-    // A 401 means the auth service recognised it as an API key but it is
-    // revoked or otherwise invalid.  Signal this so the caller can return 401.
     if (response.status === 401)
       return { organizationId: null, userId: null, revoked: true };
 
@@ -191,7 +187,6 @@ const resolveContextFromApiKey = async (
 
     const data = (await response.json()) as ApiKeyVerifyResponse;
 
-    // Explicit valid: false in a 2xx body should also be treated as revoked.
     if (data.valid === false)
       return { organizationId: null, userId: null, revoked: true };
 
@@ -256,7 +251,6 @@ export async function injectOrganizationContext(
 
   const authServiceUrl = findAuthServiceUrl(context.env);
 
-  // Explicit API key (X-API-Key header or ApiKey prefix)
   const apiKey = extractApiKeyFromRequest(context.req.raw);
   if (apiKey) {
     const { organizationId, userId, revoked } = await resolveContextFromApiKey(
@@ -278,13 +272,9 @@ export async function injectOrganizationContext(
     return next();
   }
 
-  // Bearer token — API keys issued by this platform always have the 'crow_' prefix.
-  // Only run API-key verification for tokens that match that shape; everything else
-  // is treated as a session JWT and forwarded directly to downstream services.
   const sessionToken = extractSessionTokenFromRequest(context.req.raw);
   if (sessionToken) {
     if (sessionToken.startsWith('crow_')) {
-      // Looks like an API key — verify it
       const apiKeyContext = await resolveContextFromApiKey(
         sessionToken,
         authServiceUrl,
@@ -308,7 +298,6 @@ export async function injectOrganizationContext(
       }
     }
 
-    // Treat as a session JWT — extract org from active session
     const organizationId = await resolveOrganizationFromSession(
       sessionToken,
       authServiceUrl,
@@ -318,15 +307,6 @@ export async function injectOrganizationContext(
     context.set('organizationId', organizationId ?? '');
     context.set('userId', '');
     return next();
-  }
-
-  const existingBetterAuthOrgId = context.get('organizationId');
-  if (existingBetterAuthOrgId) {
-    const resolvedInternalOrgId = await resolveBetterAuthOrgIdToInternalUuid(
-      existingBetterAuthOrgId,
-      context.env
-    );
-    context.set('organizationId', resolvedInternalOrgId ?? '');
   }
 
   if (!context.get('organizationId')) {
