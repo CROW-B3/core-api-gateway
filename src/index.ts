@@ -48,6 +48,7 @@ app.all(
 );
 
 app.all('/api/:version{v[0-9]+}/better-auth/*', handleRequest);
+app.all('/api/:version{v[0-9]+}/products/images/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth/jwt/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth', handleRequest);
