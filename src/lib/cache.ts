@@ -14,10 +14,12 @@ const DEFAULT_CACHE_TIME_TO_LIVE = 300;
 export const buildCacheKey = (
   request: Request,
   service: string,
-  version: string
+  version: string,
+  organizationId?: string
 ): string => {
   const url = new URL(request.url);
-  return `cache:${service}:${version}:${url.pathname}${url.search}`;
+  const orgSegment = organizationId ? `:${organizationId}` : '';
+  return `cache:${service}:${version}:${url.pathname}${url.search}${orgSegment}`;
 };
 
 const buildCachedResponseHeaders = (
