@@ -18,7 +18,6 @@ const createRateLimiterWithFallthrough = (
       limit: requestLimit,
       keyGenerator: extractClientIpAddress,
       store: new WorkersKVStore({ namespace: context.env.CACHE }),
-      standardHeaders: 'draft-7',
       message: { error: 'Too many requests', message: errorMessage },
       ...options,
     });
@@ -31,20 +30,31 @@ const createRateLimiterWithFallthrough = (
 export const standardRateLimitMiddleware = async (
   context: Context<{ Bindings: Environment }>,
   next: Next
-) =>
-  createRateLimiterWithFallthrough(
+) => {
+  if (
+    context.env.ENVIRONMENT === 'local' ||
+    context.env.ENVIRONMENT === 'dev'
+  ) {
+    return next();
+  }
+
+  return createRateLimiterWithFallthrough(
     context,
     next,
     2 * 60 * 1000,
     200,
     'Rate limit exceeded. Please try again later.'
   );
+};
 
 export const authenticationRateLimitMiddleware = async (
   context: Context<{ Bindings: Environment }>,
   next: Next
 ) => {
-  if (context.env.ENVIRONMENT === 'local') {
+  if (
+    context.env.ENVIRONMENT === 'local' ||
+    context.env.ENVIRONMENT === 'dev'
+  ) {
     return next();
   }
 
