@@ -6,12 +6,18 @@ import { logger } from './lib/logger';
 import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
-import { publicEndpointRateLimitMiddleware } from './middleware/rate-limit';
+import { injectOrganizationContext } from './middleware/organization';
+import {
+  authenticationRateLimitMiddleware,
+  standardRateLimitMiddleware,
+} from './middleware/rate-limit';
+import { securityHeadersMiddleware } from './middleware/security-headers';
 import { handleRequest } from './routes';
 
 const app = new Hono<{ Bindings: Environment }>();
 
 app.use(honoLogger());
+app.use('*', securityHeadersMiddleware);
 
 app.use('/api/*', async (context, next) => {
   const corsMiddleware = createCorsMiddleware(context.env);
@@ -41,22 +47,38 @@ app.get(
 
 app.all(
   '/api/:version{v[0-9]+}/auth/onboarding/*',
+  authenticationRateLimitMiddleware,
   authenticateRequestMiddleware,
   handleRequest
 );
 app.all(
   '/api/:version{v[0-9]+}/auth/team-invitations/*',
+  authenticationRateLimitMiddleware,
   authenticateRequestMiddleware,
   handleRequest
 );
 
-app.all('/api/:version{v[0-9]+}/better-auth/*', handleRequest);
+app.all(
+  '/api/:version{v[0-9]+}/better-auth/*',
+  authenticationRateLimitMiddleware,
+  handleRequest
+);
+app.all('/api/:version{v[0-9]+}/products/images/*', handleRequest);
 app.all('/api/:version{v[0-9]+}/auth/jwt/*', handleRequest);
-app.all('/api/:version{v[0-9]+}/auth/*', handleRequest);
-app.all('/api/:version{v[0-9]+}/auth', handleRequest);
+app.all(
+  '/api/:version{v[0-9]+}/auth/*',
+  authenticationRateLimitMiddleware,
+  handleRequest
+);
+app.all(
+  '/api/:version{v[0-9]+}/auth',
+  authenticationRateLimitMiddleware,
+  handleRequest
+);
 
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
+  standardRateLimitMiddleware,
   authenticateRequestMiddleware,
   cacheMiddleware,
   handleRequest
@@ -68,10 +90,7 @@ app.notFound(context =>
 
 app.onError((error, context) => {
   logger.error('Gateway error', error);
-  return context.json(
-    { error: 'Internal Server Error', message: error.message },
-    500
-  );
+  return context.json({ error: 'Internal Server Error' }, 500);
 });
 
 export default app;
