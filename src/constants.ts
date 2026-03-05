@@ -112,6 +112,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.USERS,
     path: ServicePath.USERS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8002',
       dev: 'https://dev.internal.users.crowai.dev',
@@ -121,6 +122,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.PRODUCTS,
     path: ServicePath.PRODUCTS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8003',
       dev: 'https://dev.internal.products.crowai.dev',
@@ -130,6 +132,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.ORGANIZATIONS,
     path: ServicePath.ORGANIZATIONS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8004',
       dev: 'https://dev.internal.orgs.crowai.dev',
@@ -139,6 +142,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.ANALYTICS,
     path: ServicePath.ANALYTICS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8005',
       dev: 'https://dev.internal.analytics.crowai.dev',
@@ -148,6 +152,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.NOTIFICATIONS,
     path: ServicePath.NOTIFICATIONS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8006',
       dev: 'https://dev.internal.notifications.crowai.dev',
@@ -157,6 +162,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.PATTERNS,
     path: ServicePath.PATTERNS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8007',
       dev: 'https://dev.internal.patterns.crowai.dev',
@@ -166,6 +172,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.INTERACTIONS,
     path: ServicePath.INTERACTIONS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8008',
       dev: 'https://dev.internal.interactions.crowai.dev',
@@ -175,6 +182,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.CHAT,
     path: ServicePath.CHAT,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8009',
       dev: 'https://dev.internal.chat.crowai.dev',
@@ -184,6 +192,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.QNA,
     path: ServicePath.QNA,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8010',
       dev: 'https://dev.internal.qna.crowai.dev',
@@ -193,6 +202,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.MCP,
     path: ServicePath.MCP,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8011',
       dev: 'https://dev.mcp.crowai.dev',
@@ -202,6 +212,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.BILLING,
     path: ServicePath.BILLING,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8012',
       dev: 'https://dev.internal.billing.crowai.dev',
@@ -211,6 +222,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.PRODUCTS,
     path: ServicePath.CRAWLER_JOBS,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8003',
       dev: 'https://dev.internal.products.crowai.dev',
@@ -220,6 +232,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.CCTV,
     path: ServicePath.CCTV,
+    requiresAuth: true,
     urls: {
       local: 'http://localhost:8015',
       dev: 'https://dev.cctv.crowai.dev',
