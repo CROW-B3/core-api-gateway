@@ -24,7 +24,12 @@ export async function cacheMiddleware(
     return next();
   }
 
-  const cacheKey = buildCacheKey(context.req.raw, service.path, version);
+  const cacheKey = buildCacheKey(
+    context.req.raw,
+    service.path,
+    version,
+    context.get('organizationId') || undefined
+  );
   const cachedResponse = await fetchCachedResponse(context.env, cacheKey);
   if (cachedResponse) {
     return cachedResponse;
