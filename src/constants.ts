@@ -69,6 +69,8 @@ export const PROD_ORIGINS = [
   'https://dev.internal.billing.crowai.dev',
   'https://dev.cctv.crowai.dev',
   'https://cctv.crowai.dev',
+  'https://dashboard.crowai.dev',
+  'https://dev.dashboard.crowai.dev',
 ];
 
 export const LOCAL_ORIGINS = [
