@@ -63,6 +63,7 @@ export const PROD_ORIGINS = [
   'https://dev.internal.notifications.crowai.dev',
   'https://dev.internal.patterns.crowai.dev',
   'https://dev.internal.interactions.crowai.dev',
+  'https://dev.interactions.crowai.dev',
   'https://dev.internal.chat.crowai.dev',
   'https://dev.internal.qna.crowai.dev',
   'https://dev.mcp.crowai.dev',
@@ -175,8 +176,8 @@ export const SERVICES: ServiceConfig[] = [
     requiresAuth: true,
     urls: {
       local: 'http://localhost:8008',
-      dev: 'https://dev.internal.interactions.crowai.dev',
-      prod: 'https://internal.interactions.crowai.dev',
+      dev: 'https://dev.interactions.crowai.dev',
+      prod: 'https://interactions.crowai.dev',
     },
   },
   {
