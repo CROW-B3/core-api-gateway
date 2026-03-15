@@ -2,21 +2,17 @@
   "name": "crow-core-api-gateway",
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --env local --port 8000",
+    "dev": "wrangler dev --env local --port 8000 --inspector-port 9229 --persist-to ../.wrangler/state",
     "dev:docker": "docker compose up --build",
     "deploy": "wrangler deploy --minify",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "db:studio": "drizzle-kit studio",
-    "db:studio:remote": "REMOTE=1 drizzle-kit studio",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate:dev": "wrangler d1 migrations apply DB --env dev --remote",
-    "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
     "prepare": "husky",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "bun run prettier src/ --write"
   },
   "dependencies": {
+    "@d3avarja/try-catch": "^0.0.1",
     "@hono-rate-limiter/cloudflare": "^0.2.2",
     "@hono/zod-openapi": "^1.2.0",
     "hono": "^4.11.3",

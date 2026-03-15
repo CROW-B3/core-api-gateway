@@ -1,15 +1,13 @@
 import type { Environment, ServiceConfig, ServiceEnvironment } from '../types';
-import ky from 'ky';
 import {
-  any,
   buildRegExp,
   capture,
   digit,
   oneOrMore,
   startOfString,
-  zeroOrMore,
 } from 'ts-regex-builder';
 import { SERVICES } from '../constants';
+import { createForwardHeaders, createResponseHeaders } from '../utils/headers';
 import { logger } from './logger';
 
 const SERVICE_PATH_REGEX = buildRegExp([
@@ -27,89 +25,138 @@ const VERSION_REGEX = buildRegExp([
   '/',
 ]);
 
-const FORWARD_PATH_REGEX = buildRegExp([
-  startOfString,
-  '/api/v',
-  oneOrMore(digit),
-  '/',
-  oneOrMore(/[^/]/),
-  capture(zeroOrMore(any)),
-]);
-
-export function getServiceUrl(
+export const resolveServiceUrl = (
   service: ServiceConfig,
   env: Environment
-): string {
+): string => {
   return service.urls[env.ENVIRONMENT as ServiceEnvironment];
-}
+};
 
-export function findServiceByPath(path: string): ServiceConfig | null {
+export const findServiceByPath = (path: string): ServiceConfig | null => {
   const match = path.match(SERVICE_PATH_REGEX);
-  if (!match) return null;
+  if (!match) {
+    return null;
+  }
 
   const servicePath = match[1];
-  return SERVICES.find(s => s.path === servicePath) || null;
-}
+  return SERVICES.find(service => service.path === servicePath) || null;
+};
 
-export function extractVersion(path: string): string | null {
+export const extractVersion = (path: string): string | null => {
   const match = path.match(VERSION_REGEX);
   return match ? match[1] : null;
-}
+};
 
-export function buildForwardPath(path: string): string {
-  const match = path.match(FORWARD_PATH_REGEX);
-  return match ? match[1] || '/' : '/';
-}
+export const buildForwardPath = (path: string): string => {
+  const match = path.match(/^\/api\/v\d+(\/.*)$/);
+  return match ? match[1] : '/';
+};
 
-export async function forwardRequest(
+const buildTargetUrl = (
+  serviceUrl: string,
+  version: string,
+  forwardPath: string,
+  searchParams: string
+): URL => {
+  const targetUrl = new URL(`/api/${version}${forwardPath}`, serviceUrl);
+  targetUrl.search = searchParams;
+  return targetUrl;
+};
+
+const createServiceUnavailableResponse = (serviceName: string): Response =>
+  new Response(
+    JSON.stringify({
+      error: 'Service Unavailable',
+      message: `${serviceName} is not responding`,
+    }),
+    { status: 503, headers: { 'Content-Type': 'application/json' } }
+  );
+
+const isRequestMethodWithBody = (method: string): boolean =>
+  method !== 'GET' && method !== 'HEAD';
+
+export const forwardRequest = async (
   request: Request,
   service: ServiceConfig,
   env: Environment,
   forwardPath: string,
-  version: string
-): Promise<Response> {
-  const serviceUrl = getServiceUrl(service, env);
-  const targetUrl = new URL(`/api/${version}${forwardPath}`, serviceUrl);
+  version: string,
+  authenticationToken?: string,
+  organizationId?: string | null,
+  userId?: string | null,
+  preserveSetCookie = false
+): Promise<Response> => {
+  const serviceUrl = resolveServiceUrl(service, env);
+  const requestUrl = new URL(request.url);
+  const targetUrl = buildTargetUrl(
+    serviceUrl,
+    version,
+    forwardPath,
+    requestUrl.search
+  );
+  const headers = createForwardHeaders(
+    request.headers,
+    requestUrl,
+    service.name,
+    request.method
+  );
 
-  const url = new URL(request.url);
-  targetUrl.search = url.search;
+  if (authenticationToken) {
+    headers.set('Authorization', `Bearer ${authenticationToken}`);
+  }
 
-  const headers = new Headers(request.headers);
-  headers.set('X-Forwarded-Host', url.host);
-  headers.set('X-Forwarded-Proto', url.protocol.replace(':', ''));
-  headers.set('X-Gateway-Service', service.name);
+  // Always strip client-supplied X-Organization-Id and X-User-Id to prevent header injection.
+  // Re-inject only the gateway-resolved values.
+  headers.delete('X-Organization-Id');
+  headers.delete('X-User-Id');
 
-  const forwardedRequest = new Request(targetUrl.toString(), {
-    method: request.method,
-    headers,
-    body: request.body,
-    redirect: 'manual',
-  });
+  if (organizationId) {
+    headers.set('X-Organization-Id', organizationId);
+  }
+
+  if (userId) {
+    headers.set('X-User-Id', userId);
+  }
+
+  // Inject shared internal key so downstream services can reject requests
+  // that arrive directly at their internal URLs (bypassing the gateway).
+  if ((env as unknown as Record<string, unknown>).INTERNAL_GATEWAY_KEY) {
+    headers.set(
+      'X-Internal-Key',
+      (env as unknown as Record<string, string>).INTERNAL_GATEWAY_KEY
+    );
+  }
 
   try {
-    const response = await ky(targetUrl.toString(), {
-      method: forwardedRequest.method,
-      headers: forwardedRequest.headers,
-      body: forwardedRequest.body,
-    });
+    const fetchOptions: RequestInit = {
+      method: request.method,
+      headers,
+      redirect: 'manual',
+    };
 
-    const responseHeaders = new Headers(response.headers);
-    responseHeaders.set('X-Gateway-Service', service.name);
-    responseHeaders.set('X-Gateway-Version', version);
+    if (isRequestMethodWithBody(request.method)) {
+      fetchOptions.body = request.body;
+      (fetchOptions as RequestInit & { duplex: string }).duplex = 'half';
+    }
 
-    return new Response(response.body, {
+    const response = await fetch(targetUrl.toString(), fetchOptions);
+
+    const responseHeaders = createResponseHeaders(
+      response.headers,
+      service.name,
+      version,
+      preserveSetCookie
+    );
+
+    const responseBody = await response.text();
+
+    return new Response(responseBody, {
       status: response.status,
       statusText: response.statusText,
       headers: responseHeaders,
     });
   } catch (error) {
     logger.error(`Forward error to ${service.name}`, error);
-    return new Response(
-      JSON.stringify({
-        error: 'Service Unavailable',
-        message: `${service.name} is not responding`,
-      }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } }
-    );
+    return createServiceUnavailableResponse(service.name);
   }
-}
+};
