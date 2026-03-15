@@ -1,0 +1,19 @@
+meta {
+  name: Gateway - MCP Endpoint
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/mcp
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{apiKey}}
+}
+
+headers {
+  Content-Type: application/json
+}
