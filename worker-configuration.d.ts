@@ -8,7 +8,7 @@ declare namespace Cloudflare {
   interface Env {
     CACHE: KVNamespace;
     AUTH_SERVICE_URL: 'https://auth.crowai.dev' | 'https://dev.auth.crowai.dev';
-    ENVIRONMENT: 'prod' | 'dev' | 'local';
+    ENVIRONMENT: string;
     CLOUDFLARE_D1_ACCOUNT_ID: string;
     CLOUDFLARE_D1_API_TOKEN: string;
     CLOUDFLARE_D1_DATABASE_ID: string;
