@@ -105,8 +105,6 @@ export const forwardRequest = async (
     headers.set('Authorization', `Bearer ${authenticationToken}`);
   }
 
-  // Always strip client-supplied X-Organization-Id and X-User-Id to prevent header injection.
-  // Re-inject only the gateway-resolved values.
   headers.delete('X-Organization-Id');
   headers.delete('X-User-Id');
 
@@ -118,8 +116,6 @@ export const forwardRequest = async (
     headers.set('X-User-Id', userId);
   }
 
-  // Inject shared internal key so downstream services can reject requests
-  // that arrive directly at their internal URLs (bypassing the gateway).
   if ((env as unknown as Record<string, unknown>).INTERNAL_GATEWAY_KEY) {
     headers.set(
       'X-Internal-Key',
@@ -127,11 +123,6 @@ export const forwardRequest = async (
     );
   }
 
-  // Inject the gateway's service API key when forwarding to the organization
-  // service so that service-to-service auth (X-Service-API-Key) is satisfied.
-  // This allows endpoints like /organizations/by-auth-id/:id that require
-  // callingService to be set (via serviceAuthMiddleware) to return 200 for
-  // authenticated dashboard requests instead of 401.
   if (
     service.name === ServiceName.ORGANIZATIONS &&
     env.SERVICE_API_KEY_ORG_SERVICE

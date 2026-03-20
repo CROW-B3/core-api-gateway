@@ -25,9 +25,6 @@ export async function handleRequest(
   const rawBearer = context.req.header('Authorization')?.startsWith('Bearer ')
     ? context.req.header('Authorization')!.slice(7).trim()
     : undefined;
-  // Do not forward API keys (crow_* prefix) as Bearer tokens to downstream
-  // services — they are not JWTs and will be rejected by service JWT middleware.
-  // Downstream services receive the resolved org/user context via X-* headers.
   const originalBearer =
     rawBearer && !rawBearer.startsWith('crow_') ? rawBearer : undefined;
   const authenticationToken = originalBearer || context.get('token');

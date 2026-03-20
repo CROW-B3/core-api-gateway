@@ -57,13 +57,9 @@ const createUnauthorizedResponse = (context: Context) =>
     401
   );
 
-// Paths that must be publicly reachable even when the service has requiresAuth: true.
-// Stripe webhook endpoints must not require authentication — Stripe sends only a
-// Stripe-Signature header and relies on signature verification, not HTTP auth.
 const PUBLIC_PATH_OVERRIDES = [
   /^\/api\/v\d+\/billing\/webhook$/,
   /^\/api\/v\d+\/webhooks\/stripe$/,
-  // Health/readiness probes must be accessible by load balancers without auth
   /^\/api\/v\d+\/[^/]+\/health$/,
   /^\/api\/v\d+\/[^/]+\/ready$/,
   /^\/health$/,
@@ -79,16 +75,12 @@ export async function authenticateRequestMiddleware(
 ) {
   const requestPath = context.req.path;
 
-  // Always allow public path overrides regardless of service requiresAuth setting
   if (isPublicPathOverride(requestPath)) {
     return next();
   }
 
   const service = findServiceByPath(requestPath);
 
-  // Allow trusted internal service-to-service calls using X-Internal-Key.
-  // These come from services like bff-chat-service calling the gateway to
-  // fetch data on behalf of a user. The org context is provided via X-Organization-Id.
   const internalKey = context.req.header('x-internal-key');
   if (
     internalKey &&
@@ -110,8 +102,6 @@ export async function authenticateRequestMiddleware(
     }
   }
 
-  // Allow API key requests through — organization.ts handles key validation + org resolution.
-  // A crow_ prefixed Bearer token or X-API-Key / ApiKey header indicates API key auth.
   const authHeader = context.req.header('authorization') ?? '';
   const apiKeyHeader = context.req.header('x-api-key') ?? '';
   const hasApiKey =
