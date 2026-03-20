@@ -75,6 +75,10 @@ interface UserByAuthIdResponse {
 }
 
 interface ApiKeyVerifyResponse {
+  // Auth service flat format: { token, organizationId, userId }
+  organizationId?: string | null;
+  userId?: string | null;
+  // Better-auth nested format (kept for forward compat): { valid, key: { userId, metadata } }
   valid?: boolean;
   key?: { userId?: string; metadata?: { organizationId?: string } };
 }
@@ -228,8 +232,12 @@ const resolveContextFromApiKey = async (
     if (data.valid === false)
       return { organizationId: null, userId: null, revoked: true };
 
-    const organizationId = data.key?.metadata?.organizationId ?? null;
-    const userId = data.key?.userId ?? null;
+    // Support both response formats:
+    // 1. Auth service flat format: { organizationId, userId }
+    // 2. Better-auth nested format: { key: { userId, metadata: { organizationId } } }
+    const organizationId =
+      data.organizationId ?? data.key?.metadata?.organizationId ?? null;
+    const userId = data.userId ?? data.key?.userId ?? null;
 
     // Verify the key owner is actually a member of the claimed org.
     // This prevents metadata tampering (Bob setting organizationId=Alice's UUID).
@@ -248,12 +256,17 @@ const resolveContextFromApiKey = async (
   }
 };
 
+interface SessionContext {
+  organizationId: string | null;
+  userId: string | null;
+}
+
 const resolveOrganizationFromSession = async (
   sessionToken: string,
   authServiceUrl: string,
   env: Environment,
   cookieHeader?: string
-): Promise<string | null> => {
+): Promise<SessionContext> => {
   try {
     const headers: HeadersInit = { Authorization: `Bearer ${sessionToken}` };
     // Forward the full Cookie header so better-auth can read session_data
@@ -264,24 +277,32 @@ const resolveOrganizationFromSession = async (
     const response = await fetch(`${authServiceUrl}/api/v1/auth/get-session`, {
       headers,
     });
-    if (!response.ok) return null;
+    if (!response.ok) return { organizationId: null, userId: null };
     const data = (await response.json()) as SessionResponse;
+    const betterAuthUserId = data.user?.id ?? null;
     const betterAuthOrgId = data.session?.activeOrganizationId;
 
     if (betterAuthOrgId) {
-      return resolveBetterAuthOrgIdToInternalUuid(betterAuthOrgId, env);
+      const organizationId = await resolveBetterAuthOrgIdToInternalUuid(
+        betterAuthOrgId,
+        env
+      );
+      return { organizationId, userId: betterAuthUserId };
     }
 
     // activeOrganizationId is null — fall back to the user service which stores
     // the internal org UUID on the user record regardless of session state.
-    const betterAuthUserId = data.user?.id;
     if (betterAuthUserId) {
-      return resolveOrgIdFromUserService(betterAuthUserId, env);
+      const organizationId = await resolveOrgIdFromUserService(
+        betterAuthUserId,
+        env
+      );
+      return { organizationId, userId: betterAuthUserId };
     }
 
-    return null;
+    return { organizationId: null, userId: null };
   } catch {
-    return null;
+    return { organizationId: null, userId: null };
   }
 };
 
@@ -346,14 +367,14 @@ export async function injectOrganizationContext(
       }
     }
 
-    const organizationId = await resolveOrganizationFromSession(
+    const sessionContext = await resolveOrganizationFromSession(
       sessionToken,
       authServiceUrl,
       context.env,
       context.req.header('Cookie') ?? undefined
     );
-    context.set('organizationId', organizationId ?? '');
-    context.set('userId', '');
+    context.set('organizationId', sessionContext.organizationId ?? '');
+    context.set('userId', sessionContext.userId ?? '');
     return next();
   }
 
