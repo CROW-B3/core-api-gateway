@@ -6,7 +6,7 @@ import {
   oneOrMore,
   startOfString,
 } from 'ts-regex-builder';
-import { SERVICES } from '../constants';
+import { ServiceName, SERVICES } from '../constants';
 import { createForwardHeaders, createResponseHeaders } from '../utils/headers';
 import { logger } from './logger';
 
@@ -125,6 +125,18 @@ export const forwardRequest = async (
       'X-Internal-Key',
       (env as unknown as Record<string, string>).INTERNAL_GATEWAY_KEY
     );
+  }
+
+  // Inject the gateway's service API key when forwarding to the organization
+  // service so that service-to-service auth (X-Service-API-Key) is satisfied.
+  // This allows endpoints like /organizations/by-auth-id/:id that require
+  // callingService to be set (via serviceAuthMiddleware) to return 200 for
+  // authenticated dashboard requests instead of 401.
+  if (
+    service.name === ServiceName.ORGANIZATIONS &&
+    env.SERVICE_API_KEY_ORG_SERVICE
+  ) {
+    headers.set('X-Service-API-Key', env.SERVICE_API_KEY_ORG_SERVICE);
   }
 
   try {
