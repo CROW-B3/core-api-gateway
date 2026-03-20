@@ -76,6 +76,19 @@ export async function authenticateRequestMiddleware(
   }
 
   const service = findServiceByPath(requestPath);
+
+  // Allow trusted internal service-to-service calls using X-Internal-Key.
+  // These come from services like bff-chat-service calling the gateway to
+  // fetch data on behalf of a user. The org context is provided via X-Organization-Id.
+  const internalKey = context.req.header('x-internal-key');
+  if (
+    internalKey &&
+    context.env.INTERNAL_GATEWAY_KEY &&
+    internalKey === context.env.INTERNAL_GATEWAY_KEY
+  ) {
+    return next();
+  }
+
   const cookieHeader = context.req.header('cookie');
 
   if (cookieHeader) {

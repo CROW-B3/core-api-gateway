@@ -70,6 +70,10 @@ interface OrgByAuthIdResponse {
   id?: string;
 }
 
+interface UserByAuthIdResponse {
+  organizationId?: string;
+}
+
 interface ApiKeyVerifyResponse {
   valid?: boolean;
   key?: { userId?: string; metadata?: { organizationId?: string } };
@@ -106,6 +110,40 @@ const resolveBetterAuthOrgIdToInternalUuid = async (
     if (!response.ok) return null;
     const data = (await response.json()) as OrgByAuthIdResponse;
     return data.id ?? null;
+  } catch {
+    return null;
+  }
+};
+
+// Fallback: when better-auth's activeOrganizationId is null (e.g. first login or
+// session created before set-active-organization was called), look up the user's
+// internal organizationId directly from the user service using their betterAuthUserId.
+// The user service stores the internal org UUID on each user record.
+const resolveOrgIdFromUserService = async (
+  betterAuthUserId: string,
+  env: Environment
+): Promise<string | null> => {
+  try {
+    const userService = SERVICES.find(s => s.path === ServicePath.USERS);
+    if (!userService) return null;
+    const userServiceUrl =
+      userService.urls[env.ENVIRONMENT as keyof typeof userService.urls] ??
+      userService.urls.dev;
+    const headers: Record<string, string> = {
+      'X-Service-API-Key': env.SERVICE_API_KEY_ORG_SERVICE,
+    };
+    if ((env as unknown as Record<string, string>).INTERNAL_GATEWAY_KEY) {
+      headers['X-Internal-Key'] = (
+        env as unknown as Record<string, string>
+      ).INTERNAL_GATEWAY_KEY;
+    }
+    const response = await fetch(
+      `${userServiceUrl}/api/v1/users/by-auth-id/${encodeURIComponent(betterAuthUserId)}`,
+      { headers }
+    );
+    if (!response.ok) return null;
+    const data = (await response.json()) as UserByAuthIdResponse;
+    return data.organizationId ?? null;
   } catch {
     return null;
   }
@@ -229,9 +267,19 @@ const resolveOrganizationFromSession = async (
     if (!response.ok) return null;
     const data = (await response.json()) as SessionResponse;
     const betterAuthOrgId = data.session?.activeOrganizationId;
-    if (!betterAuthOrgId) return null;
 
-    return resolveBetterAuthOrgIdToInternalUuid(betterAuthOrgId, env);
+    if (betterAuthOrgId) {
+      return resolveBetterAuthOrgIdToInternalUuid(betterAuthOrgId, env);
+    }
+
+    // activeOrganizationId is null — fall back to the user service which stores
+    // the internal org UUID on the user record regardless of session state.
+    const betterAuthUserId = data.user?.id;
+    if (betterAuthUserId) {
+      return resolveOrgIdFromUserService(betterAuthUserId, env);
+    }
+
+    return null;
   } catch {
     return null;
   }
