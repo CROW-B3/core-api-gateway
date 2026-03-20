@@ -192,14 +192,18 @@ const resolveContextFromApiKey = async (
   env: Environment
 ): Promise<ApiKeyContext> => {
   try {
+    const verifyHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Service-API-Key': env.SERVICE_API_KEY_ORG_SERVICE,
+    };
+    if (env.INTERNAL_GATEWAY_KEY) {
+      verifyHeaders['X-Internal-Key'] = env.INTERNAL_GATEWAY_KEY;
+    }
     const response = await fetch(
       `${authServiceUrl}/api/v1/auth/api-key/verify`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Service-API-Key': env.SERVICE_API_KEY_ORG_SERVICE,
-        },
+        headers: verifyHeaders,
         body: JSON.stringify({ key: apiKey }),
       }
     );
@@ -293,6 +297,10 @@ export async function injectOrganizationContext(
     return next();
   }
 
+  // Internal service-to-service requests are pre-authenticated by the auth
+  // middleware. Trust the X-Organization-Id header they supply directly so
+  // the downstream service receives the correct org context without requiring
+  // a user session.
   const internalKey = context.req.header('x-internal-key');
   if (
     internalKey &&

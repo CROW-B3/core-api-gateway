@@ -24,6 +24,9 @@ export async function cacheMiddleware(
     return next();
   }
 
+  // Respect standard Cache-Control request directives.
+  // A request with `Cache-Control: no-cache` or `no-store` must bypass the
+  // KV cache and fetch a fresh response from the upstream service.
   const requestCacheControl = context.req.header('Cache-Control') ?? '';
   const bypassCache =
     requestCacheControl.includes('no-cache') ||
@@ -35,9 +38,12 @@ export async function cacheMiddleware(
     version,
     context.get('organizationId') || undefined
   );
-  const cachedResponse = await fetchCachedResponse(context.env, cacheKey);
-  if (cachedResponse) {
-    return cachedResponse;
+
+  if (!bypassCache) {
+    const cachedResponse = await fetchCachedResponse(context.env, cacheKey);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
   }
 
   await next();
