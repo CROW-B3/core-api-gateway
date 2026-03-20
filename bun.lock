@@ -17,6 +17,7 @@
       },
       "devDependencies": {
         "@antfu/eslint-config": "^6.7.3",
+        "@cloudflare/workers-types": "^4.20240124.0",
         "@commitlint/config-conventional": "^20.3.1",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
@@ -67,7 +68,6 @@
     "@cspotcode/source-map-support": ["@cspotcode/source-map-support@0.8.1", "", { "dependencies": { "@jridgewell/trace-mapping": "0.3.9" } }, "sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw=="],
 
     "@d3avarja/try-catch": ["@d3avarja/try-catch@0.0.1", "", {}, "sha512-rVWveoeTV3HUy1EUcez4oOvfv1Nnziym10CQVg73oMCqO3TRVo5Iu5IhFa/x8mV5GebMpQqHThurr3dL+2/b8A=="],
-
 
     "@emnapi/runtime": ["@emnapi/runtime@1.7.1", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-PVtJr5CmLwYAU9PZDMITZoR5iAOShYREoR45EyyLrbntV50mdePTgUn4AmOw90Ifcj+x2kRjdzr1HP3RrNiHGA=="],
 
