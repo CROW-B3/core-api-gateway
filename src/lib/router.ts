@@ -105,8 +105,6 @@ export const forwardRequest = async (
     headers.set('Authorization', `Bearer ${authenticationToken}`);
   }
 
-  // Always strip client-supplied X-Organization-Id and X-User-Id to prevent header injection.
-  // Re-inject only the gateway-resolved values.
   headers.delete('X-Organization-Id');
   headers.delete('X-User-Id');
 
@@ -118,13 +116,18 @@ export const forwardRequest = async (
     headers.set('X-User-Id', userId);
   }
 
-  // Inject shared internal key so downstream services can reject requests
-  // that arrive directly at their internal URLs (bypassing the gateway).
   if ((env as unknown as Record<string, unknown>).INTERNAL_GATEWAY_KEY) {
     headers.set(
       'X-Internal-Key',
       (env as unknown as Record<string, string>).INTERNAL_GATEWAY_KEY
     );
+  }
+
+  if (
+    service.name === ServiceName.ORGANIZATIONS &&
+    env.SERVICE_API_KEY_ORG_SERVICE
+  ) {
+    headers.set('X-Service-API-Key', env.SERVICE_API_KEY_ORG_SERVICE);
   }
 
   try {
