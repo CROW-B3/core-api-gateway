@@ -24,6 +24,11 @@ export async function cacheMiddleware(
     return next();
   }
 
+  const requestCacheControl = context.req.header('Cache-Control') ?? '';
+  const bypassCache =
+    requestCacheControl.includes('no-cache') ||
+    requestCacheControl.includes('no-store');
+
   const cacheKey = buildCacheKey(
     context.req.raw,
     service.path,
@@ -39,7 +44,7 @@ export async function cacheMiddleware(
 
   const response = context.res;
   if (response && shouldCacheResponse(context.req.raw, response)) {
-    return storeCachedResponse(context.env, cacheKey, response);
+    return storeCachedResponse(context.env, cacheKey, response.clone());
   }
 
   return response;
