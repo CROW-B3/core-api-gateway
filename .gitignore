@@ -34,3 +34,8 @@ lerna-debug.log*
 
 
 
+
+# Playwright CLI artifacts
+.playwright-cli/
+.playwright/
+test-results/
