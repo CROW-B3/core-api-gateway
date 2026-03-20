@@ -16,6 +16,7 @@ export enum ServicePath {
   BILLING = 'billing',
   CRAWLER_JOBS = 'crawler-jobs',
   CCTV = 'cctv',
+  INGEST = 'ingest',
 }
 
 export enum ServiceName {
@@ -32,6 +33,7 @@ export enum ServiceName {
   MCP = 'mcp-service',
   BILLING = 'core-billing-service',
   CCTV = 'cctv-ingest-service',
+  WEB_INGEST = 'web-ingest-service',
 }
 
 export const PROD_ORIGINS = [
@@ -72,6 +74,8 @@ export const PROD_ORIGINS = [
   'https://cctv.crowai.dev',
   'https://dashboard.crowai.dev',
   'https://dev.dashboard.crowai.dev',
+  'https://rogue.crowai.dev',
+  'https://dev.rogue.crowai.dev',
 ];
 
 export const LOCAL_ORIGINS = [
@@ -240,6 +244,16 @@ export const SERVICES: ServiceConfig[] = [
       local: 'http://localhost:8015',
       dev: 'https://dev.cctv.crowai.dev',
       prod: 'https://cctv.crowai.dev',
+    },
+  },
+  {
+    name: ServiceName.WEB_INGEST,
+    path: ServicePath.INGEST,
+    requiresAuth: true,
+    urls: {
+      local: 'http://localhost:8013',
+      dev: 'https://dev.internal.ingest-worker.crowai.dev',
+      prod: 'https://internal.ingest-worker.crowai.dev',
     },
   },
 ];
