@@ -24,9 +24,6 @@ export async function cacheMiddleware(
     return next();
   }
 
-  // Respect standard Cache-Control request directives.
-  // A request with `Cache-Control: no-cache` or `no-store` must bypass the
-  // KV cache and fetch a fresh response from the upstream service.
   const requestCacheControl = context.req.header('Cache-Control') ?? '';
   const bypassCache =
     requestCacheControl.includes('no-cache') ||
@@ -50,8 +47,6 @@ export async function cacheMiddleware(
 
   const response = context.res;
   if (response && shouldCacheResponse(context.req.raw, response)) {
-    // Clone the response before reading its body for caching,
-    // so the original body stream remains available for the client.
     return storeCachedResponse(context.env, cacheKey, response.clone());
   }
 
