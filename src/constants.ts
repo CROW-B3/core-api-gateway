@@ -199,7 +199,7 @@ export const SERVICES: ServiceConfig[] = [
   {
     name: ServiceName.QNA,
     path: ServicePath.QNA,
-    requiresAuth: true,
+    requiresAuth: false,
     urls: {
       local: 'http://localhost:8010',
       dev: 'https://dev.internal.qna.crowai.dev',
