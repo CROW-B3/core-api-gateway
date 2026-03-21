@@ -268,7 +268,10 @@ const resolveOrganizationFromSession = async (
         betterAuthOrgId,
         env
       );
-      return { organizationId, userId: betterAuthUserId };
+      if (organizationId) {
+        return { organizationId, userId: betterAuthUserId };
+      }
+      // Fall through to user service fallback if org ID resolution failed
     }
 
     if (betterAuthUserId) {
