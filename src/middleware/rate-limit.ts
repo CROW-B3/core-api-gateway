@@ -4,7 +4,7 @@ import { WorkersKVStore } from '@hono-rate-limiter/cloudflare';
 import { rateLimiter } from 'hono-rate-limiter';
 import { extractClientIpAddress } from '../lib/utils';
 
-const createRateLimiterWithFallthrough = (
+const createRateLimiterWithFallthrough = async (
   context: Context<{ Bindings: Environment }>,
   next: Next,
   windowMilliseconds: number,
@@ -21,7 +21,7 @@ const createRateLimiterWithFallthrough = (
       message: { error: 'Too many requests', message: errorMessage },
       ...options,
     });
-    return limiter(context, next);
+    return await limiter(context, next);
   } catch {
     return next();
   }
