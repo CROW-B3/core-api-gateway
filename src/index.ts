@@ -20,7 +20,7 @@ app.use(honoLogger());
 app.use('*', securityHeadersMiddleware);
 
 app.use('/api/*', async (context, next) => {
-  const corsMiddleware = createCorsMiddleware();
+  const corsMiddleware = createCorsMiddleware(context.env);
   return await corsMiddleware(context, next);
 });
 
