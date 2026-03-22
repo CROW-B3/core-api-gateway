@@ -1,13 +1,37 @@
 import type { Context, Next } from 'hono';
 
+const ALLOWED_ORIGINS = [
+  'https://dev.app.crowai.dev',
+  'https://dev.auth.crowai.dev',
+  'https://app.crowai.dev',
+  'https://auth.crowai.dev',
+  'http://localhost:3000',
+  'http://localhost:3001',
+];
+
 const ALLOW_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
-const ALLOW_HEADERS = 'Content-Type,Authorization,X-Requested-With,X-API-Key';
+const ALLOW_HEADERS =
+  'Content-Type,Authorization,X-Requested-With,X-API-Key,X-Organization-Id,X-Internal-Key,Cookie';
 const EXPOSE_HEADERS =
   'X-Cache,X-Cache-Age,X-Gateway-Service,X-Gateway-Version';
 
+const resolveAllowedOrigin = (requestOrigin: string | undefined): string | null =>
+  requestOrigin && ALLOWED_ORIGINS.includes(requestOrigin) ? requestOrigin : null;
+
+const setCorsHeaders = (headers: Headers, origin: string): void => {
+  headers.set('Access-Control-Allow-Origin', origin);
+  headers.set('Access-Control-Allow-Credentials', 'true');
+  headers.set('Access-Control-Expose-Headers', EXPOSE_HEADERS);
+  headers.set('Vary', 'Origin');
+};
+
 export function createCorsMiddleware() {
   return async (c: Context, next: Next) => {
-    const origin = c.req.header('Origin') || '*';
+    const origin = resolveAllowedOrigin(c.req.header('Origin'));
+
+    if (!origin) {
+      return next();
+    }
 
     if (c.req.method === 'OPTIONS') {
       c.header('Access-Control-Allow-Origin', origin);
@@ -20,11 +44,10 @@ export function createCorsMiddleware() {
       return c.body(null, 204);
     }
 
-    await next();
-
-    c.res.headers.set('Access-Control-Allow-Origin', origin);
-    c.res.headers.set('Access-Control-Allow-Credentials', 'true');
-    c.res.headers.set('Access-Control-Expose-Headers', EXPOSE_HEADERS);
-    c.res.headers.set('Vary', 'Origin');
+    try {
+      await next();
+    } finally {
+      setCorsHeaders(c.res.headers, origin);
+    }
   };
 }
