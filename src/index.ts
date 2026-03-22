@@ -17,12 +17,10 @@ import { handleRequest } from './routes';
 const app = new Hono<{ Bindings: Environment }>();
 
 app.use(honoLogger());
-app.use('*', securityHeadersMiddleware);
 
-app.use('/api/*', async (context, next) => {
-  const corsMiddleware = createCorsMiddleware();
-  return await corsMiddleware(context, next);
-});
+const corsMiddleware = createCorsMiddleware();
+app.use('*', async (context, next) => corsMiddleware(context, next));
+app.use('*', securityHeadersMiddleware);
 
 app.use('/health', publicEndpointRateLimitMiddleware);
 app.use('/', publicEndpointRateLimitMiddleware);
