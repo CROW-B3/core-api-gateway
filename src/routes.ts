@@ -1,11 +1,27 @@
 import type { Context } from 'hono';
 import type { Environment } from './types';
+import { ServicePath } from './constants';
 import {
   buildForwardPath,
   extractVersion,
   findServiceByPath,
   forwardRequest,
 } from './lib/router';
+
+function extractAuthenticationToken(
+  context: Context<{ Bindings: Environment }>,
+  isApiKeyPassthrough: boolean
+): string | undefined {
+  const rawBearer = context.req.header('Authorization')?.startsWith('Bearer ')
+    ? context.req.header('Authorization')!.slice(7).trim()
+    : undefined;
+
+  if (rawBearer?.startsWith('crow_') && isApiKeyPassthrough) return rawBearer;
+
+  const originalBearer =
+    rawBearer && !rawBearer.startsWith('crow_') ? rawBearer : undefined;
+  return originalBearer || context.get('token');
+}
 
 export async function handleRequest(
   context: Context<{ Bindings: Environment }>
@@ -22,14 +38,11 @@ export async function handleRequest(
   }
 
   const forwardPath = buildForwardPath(requestPath);
-  const originalBearer = context.req
-    .header('Authorization')
-    ?.startsWith('Bearer ')
-    ? context.req.header('Authorization')!.slice(7).trim()
-    : undefined;
-  const originalBearer =
-    rawBearer && !rawBearer.startsWith('crow_') ? rawBearer : undefined;
-  const authenticationToken = originalBearer || context.get('token');
+  const isApiKeyPassthrough = service.path === ServicePath.INGEST;
+  const authenticationToken = extractAuthenticationToken(
+    context,
+    isApiKeyPassthrough
+  );
   const organizationId = context.get('organizationId');
   const userId = context.get('userId');
 

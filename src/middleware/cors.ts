@@ -1,7 +1,7 @@
 import type { Context, Next } from 'hono';
 
 const ALLOW_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
-const ALLOW_HEADERS = 'Content-Type,Authorization,X-Requested-With';
+const ALLOW_HEADERS = 'Content-Type,Authorization,X-Requested-With,X-API-Key';
 const EXPOSE_HEADERS =
   'X-Cache,X-Cache-Age,X-Gateway-Service,X-Gateway-Version';
 
