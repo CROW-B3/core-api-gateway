@@ -150,7 +150,7 @@ export const forwardRequest = async (
       preserveSetCookie
     );
 
-    const responseBody = await response.text();
+    const responseBody = await response.arrayBuffer();
 
     return new Response(responseBody, {
       status: response.status,
