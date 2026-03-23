@@ -9,7 +9,9 @@
     "prepare": "husky",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "format": "bun run prettier src/ --write"
+    "format": "bun run prettier src/ --write",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@d3avarja/try-catch": "^0.0.1",
@@ -29,6 +31,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
+    "vitest": "^4.1.0",
     "wrangler": "^4.58.0"
   },
   "lint-staged": {
