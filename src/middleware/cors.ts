@@ -1,12 +1,19 @@
 import type { Context, Next } from 'hono';
 
 const ALLOWED_ORIGINS = [
-  'https://dev.app.crowai.dev',
-  'https://dev.auth.crowai.dev',
+  'https://crowai.dev',
+  'https://dev.crowai.dev',
   'https://app.crowai.dev',
+  'https://dev.app.crowai.dev',
   'https://auth.crowai.dev',
+  'https://dev.auth.crowai.dev',
+  'https://dashboard.crowai.dev',
+  'https://dev.dashboard.crowai.dev',
+  'https://rogue.crowai.dev',
+  'https://dev.rogue.crowai.dev',
   'http://localhost:3000',
   'http://localhost:3001',
+  'http://localhost:3002',
 ];
 
 const ALLOW_METHODS = 'GET,POST,PUT,PATCH,DELETE,OPTIONS';
