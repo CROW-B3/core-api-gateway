@@ -1,5 +1,5 @@
 import type { Environment } from './types';
-import { Hono } from 'hono';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { cache } from 'hono/cache';
 import { logger as honoLogger } from 'hono/logger';
 import { logger } from './lib/logger';
@@ -14,7 +14,7 @@ import {
 import { securityHeadersMiddleware } from './middleware/security-headers';
 import { handleRequest } from './routes';
 
-const app = new Hono<{ Bindings: Environment }>();
+const app = new OpenAPIHono<{ Bindings: Environment }>();
 
 app.use(honoLogger());
 
@@ -85,6 +85,14 @@ app.notFound(context =>
 app.onError((error, context) => {
   logger.error('Gateway error', error);
   return context.json({ error: 'Internal Server Error' }, 500);
+});
+
+app.doc('/docs', {
+  openapi: '3.0.0',
+  info: {
+    version: '1.0.0',
+    title: 'CROW API Gateway',
+  },
 });
 
 export default app;
