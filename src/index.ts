@@ -6,6 +6,7 @@ import { logger } from './lib/logger';
 import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
+import { injectOrganizationContext } from './middleware/organization';
 import {
   authenticationRateLimitMiddleware,
   publicEndpointRateLimitMiddleware,
@@ -73,7 +74,7 @@ app.all(
 app.all(
   '/api/:version{v[0-9]+}/:service/*',
   standardRateLimitMiddleware,
-  authenticateRequestMiddleware,
+  injectOrganizationContext,
   cacheMiddleware,
   handleRequest
 );
