@@ -6,9 +6,9 @@ import { logger } from './lib/logger';
 import { authenticateRequestMiddleware } from './middleware/auth';
 import { cacheMiddleware } from './middleware/cache';
 import { createCorsMiddleware } from './middleware/cors';
-import { injectOrganizationContext } from './middleware/organization';
 import {
   authenticationRateLimitMiddleware,
+  publicEndpointRateLimitMiddleware,
   standardRateLimitMiddleware,
 } from './middleware/rate-limit';
 import { securityHeadersMiddleware } from './middleware/security-headers';
