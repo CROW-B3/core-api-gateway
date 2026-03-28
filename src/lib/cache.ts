@@ -32,6 +32,7 @@ const buildCachedResponseHeaders = (
     'X-Cache-Age',
     String(Math.floor((Date.now() - cachedAt) / 1000))
   );
+  responseHeaders.set('Cache-Control', 'public, max-age=300, s-maxage=600');
   return responseHeaders;
 };
 

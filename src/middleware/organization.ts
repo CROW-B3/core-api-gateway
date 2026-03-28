@@ -271,7 +271,6 @@ const resolveOrganizationFromSession = async (
       if (organizationId) {
         return { organizationId, userId: betterAuthUserId };
       }
-      // Fall through to user service fallback if org ID resolution failed
     }
 
     if (betterAuthUserId) {
@@ -300,10 +299,6 @@ export async function injectOrganizationContext(
     return next();
   }
 
-  // Internal service-to-service requests are pre-authenticated by the auth
-  // middleware. Trust the X-Organization-Id header they supply directly so
-  // the downstream service receives the correct org context without requiring
-  // a user session.
   const internalKey = context.req.header('x-internal-key');
   if (
     internalKey &&

@@ -54,6 +54,7 @@ app.all(
   '/api/:version{v[0-9]+}/auth/team-invitations/*',
   authenticationRateLimitMiddleware,
   authenticateRequestMiddleware,
+  injectOrganizationContext,
   handleRequest
 );
 

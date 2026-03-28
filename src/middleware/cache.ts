@@ -24,9 +24,6 @@ export async function cacheMiddleware(
     return next();
   }
 
-  // Respect standard Cache-Control request directives.
-  // A request with `Cache-Control: no-cache` or `no-store` must bypass the
-  // KV cache and fetch a fresh response from the upstream service.
   const requestCacheControl = context.req.header('Cache-Control') ?? '';
   const bypassCache =
     requestCacheControl.includes('no-cache') ||
